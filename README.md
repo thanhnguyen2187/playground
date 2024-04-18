@@ -1,3 +1,3 @@
 # Playground
 
-A place for new ideas/technologies.
+A place for new ideas/technologies/expirements.
