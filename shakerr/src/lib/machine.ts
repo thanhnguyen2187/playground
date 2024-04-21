@@ -9,6 +9,7 @@ export const machine = createMachine({
   types: {
     context: {} as {
       items: Item[],
+      pickedIndex: number,
     },
     events: {} as {
       type: 'Exit'
@@ -17,6 +18,7 @@ export const machine = createMachine({
   },
   context: {
     items: [],
+    pickedIndex: -1,
   },
   id: 'Shakerr',
   initial: 'Transient',
@@ -62,6 +64,11 @@ export const machine = createMachine({
         'No Result': {
           on: {
             Shaked: {
+              actions: assign({
+                pickedIndex: ({context}) => {
+                  return Math.floor(Math.random() * context.items.length)
+                },
+              }),
               target: 'Shaking',
             },
           },
@@ -69,17 +76,31 @@ export const machine = createMachine({
         Shaking: {
           on: {
             Shaked: {
+              actions: assign({
+                pickedIndex: ({context}) => {
+                  return Math.floor(Math.random() * context.items.length)
+                },
+              }),
               target: 'Shaking',
+              reenter: true,
             },
           },
           after: {
-            '500': {
+            '1500': {
               target: 'Show Result',
             },
           },
         },
         'Show Result': {
           on: {
+            Shaked: {
+              actions: assign({
+                pickedIndex: ({context}) => {
+                  return Math.floor(Math.random() * context.items.length)
+                },
+              }),
+              target: 'Shaking',
+            },
             Reset: {
               target: 'No Result',
             },
@@ -102,9 +123,9 @@ export const machine = createMachine({
       initial: 'Idling',
       on: {
         Exit: {
-          target: 'Functioning',
+          target: 'Functioning.History',
           actions: assign({
-            items: ({event, context}) => {
+            items: ({event}) => {
               saveItems(event.items)
               return event.items
             },

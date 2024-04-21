@@ -3,14 +3,14 @@
   import { useMachine } from '@xstate/svelte'
   import { getModalStore } from '@skeletonlabs/skeleton'
   import SettingsModal from '$lib/SettingsModal.svelte'
-  import { derived } from 'svelte/store'
+  import { derived, writable } from 'svelte/store'
   import type { Item } from '$lib/data'
 
-  const {snapshot, send} = useMachine(machine)
+  const {snapshot: snapshotStore, send} = useMachine(machine)
   const modalStore = getModalStore()
 
   $: {
-    if ($snapshot.value === 'Desktop Warning') {
+    if ($snapshotStore.value === 'Desktop Warning') {
       modalStore.trigger({
         type: 'alert',
         title: 'Warning',
@@ -18,29 +18,62 @@
         buttonTextCancel: 'OK',
         response: () => send({type: 'Accept'})
       })
-    } else if (typeof $snapshot.value === 'object' && 'Settings' in $snapshot.value) {
+    } else if (typeof $snapshotStore.value === 'object' && 'Settings' in $snapshotStore.value) {
       modalStore.trigger({
         type: 'component',
         component: {
           ref: SettingsModal,
           props: {
-            items: $snapshot.context.items,
+            items: $snapshotStore.context.items,
             saveItemsFn: (items: Item[]) => {
               send({type: 'Exit', items})
             }
           }
         },
-        // type: 'alert',
-        // title: 'hello world',
       })
     }
   }
 
-  const noData = derived(snapshot, snapshot => typeof snapshot.value === 'object' && snapshot.value['Functioning'] === 'No Data')
-  const noResult = derived(snapshot, snapshot => typeof snapshot.value === 'object' && snapshot.value['Functioning'] === 'No Result')
+  function shake() {
+    send({type: 'Shaked'})
+  }
+
+  const tick = writable(0, () => {
+    let interval = setInterval(() => {
+      tick.update(value => value + 1)
+    }, 500)
+
+    return () => {
+      clearInterval(interval)
+    }
+  })
+
+  const noData = derived(snapshotStore, snapshot => typeof snapshot.value === 'object' && snapshot.value['Functioning'] === 'No Data')
+  const noResult = derived(snapshotStore, snapshot => typeof snapshot.value === 'object' && snapshot.value['Functioning'] === 'No Result')
+  const shaking = derived(snapshotStore, snapshot => typeof snapshot.value === 'object' && snapshot.value['Functioning'] === 'Shaking')
+  const showResult = derived(snapshotStore, snapshot => typeof snapshot.value === 'object' && snapshot.value['Functioning'] === 'Show Result')
+  const result = derived(snapshotStore, snapshot => snapshot.context.items[snapshot.context.pickedIndex])
+  const backgroundColors = derived(snapshotStore, snapshot => snapshot.context.items.map(item => item.backgroundColor))
+  const colorStyle = derived([tick], () => {
+    const snapshot = $snapshotStore
+    if (typeof snapshot.value === 'object') {
+      if (snapshot.value['Functioning'] === 'Shaking') {
+        const randomIndex = Math.floor(Math.random() * snapshot.context.items.length)
+        return `background-color: ${snapshot.context.items[randomIndex].backgroundColor}; color: ${snapshot.context.items[randomIndex].textColor}`
+      } else if (snapshot.value['Functioning'] === 'Show Result') {
+        const pickedIndex = snapshot.context.pickedIndex
+        return `background-color: ${snapshot.context.items[pickedIndex].backgroundColor}; color: ${snapshot.context.items[pickedIndex].textColor}`
+      }
+    }
+
+    return ``
+  })
 </script>
 
-{JSON.stringify($snapshot.value)}
+<div class="absolute">
+  {JSON.stringify($snapshotStore.value)}
+  {JSON.stringify($backgroundColors)}
+</div>
 
 <div class="absolute bottom-2 left-3 z-10">
   <button
@@ -58,7 +91,7 @@
   </button>
 </div>
 
-<div class="h-screen w-screen flex items-center justify-center">
+<div class="h-screen w-screen flex flex-col items-center justify-center transition-colors" style={$colorStyle}>
   {#if $noData}
     <p class="">
       Shakerr requires at least two items to work. <br/>
@@ -66,10 +99,49 @@
     </p>
   {:else if $noResult}
     <button
-      class="btn variant-filled"
+      class="btn btn-lg"
+      on:click={shake}
     >
-      Shake Or Click
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+        <path d="M5.5 9C5.5 5.70017 5.5 4.05025 6.4519 3.02513C7.40381 2 8.93587 2 12 2C15.0641 2 16.5962 2 17.5481 3.02513C18.5 4.05025 18.5 5.70017 18.5 9V15C18.5 18.2998 18.5 19.9497 17.5481 20.9749C16.5962 22 15.0641 22 12 22C8.93587 22 7.40381 22 6.4519 20.9749C5.5 19.9497 5.5 18.2998 5.5 15V9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M12 19H12.009" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M11 5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M22 8.5C22 8.5 21 8.846 21 9.8125C21 10.779 22 11.0335 22 12C22 12.9665 21 13.221 21 14.1875C21 15.154 22 15.5 22 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M2 8.5C2 8.5 3 8.846 3 9.8125C3 10.779 2 11.0335 2 12C2 12.9665 3 13.221 3 14.1875C3 15.154 2 15.5 2 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span>Shake it!</span>
     </button>
+  {:else if $shaking}
+    <button
+      class="btn btn-lg"
+      on:click={shake}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+        <path d="M5.5 9C5.5 5.70017 5.5 4.05025 6.4519 3.02513C7.40381 2 8.93587 2 12 2C15.0641 2 16.5962 2 17.5481 3.02513C18.5 4.05025 18.5 5.70017 18.5 9V15C18.5 18.2998 18.5 19.9497 17.5481 20.9749C16.5962 22 15.0641 22 12 22C8.93587 22 7.40381 22 6.4519 20.9749C5.5 19.9497 5.5 18.2998 5.5 15V9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M12 19H12.009" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M11 5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M22 8.5C22 8.5 21 8.846 21 9.8125C21 10.779 22 11.0335 22 12C22 12.9665 21 13.221 21 14.1875C21 15.154 22 15.5 22 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M2 8.5C2 8.5 3 8.846 3 9.8125C3 10.779 2 11.0335 2 12C2 12.9665 3 13.221 3 14.1875C3 15.154 2 15.5 2 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span>Shaking it, but feel free to prolong the process!</span>
+    </button>
+  {:else if $showResult}
+    <button
+      class="btn btn-lg"
+      on:click={shake}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+        <path d="M5.5 9C5.5 5.70017 5.5 4.05025 6.4519 3.02513C7.40381 2 8.93587 2 12 2C15.0641 2 16.5962 2 17.5481 3.02513C18.5 4.05025 18.5 5.70017 18.5 9V15C18.5 18.2998 18.5 19.9497 17.5481 20.9749C16.5962 22 15.0641 22 12 22C8.93587 22 7.40381 22 6.4519 20.9749C5.5 19.9497 5.5 18.2998 5.5 15V9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <path d="M12 19H12.009" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M11 5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M22 8.5C22 8.5 21 8.846 21 9.8125C21 10.779 22 11.0335 22 12C22 12.9665 21 13.221 21 14.1875C21 15.154 22 15.5 22 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M2 8.5C2 8.5 3 8.846 3 9.8125C3 10.779 2 11.0335 2 12C2 12.9665 3 13.221 3 14.1875C3 15.154 2 15.5 2 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span>Shake again?</span>
+    </button>
+    <div class="text-lg">
+      {$result.value}
+    </div>
   {/if}
 </div>
 

@@ -6,11 +6,9 @@
 
   export let items: Item[] = []
   export let saveItemsFn: (items: Item[]) => void
-  let newItem = createNewItem()
 
   function addNewItem() {
-    items = [...items, newItem]
-    newItem = createNewItem()
+    items = [...items, createNewItem()]
   }
 
   function removeItem(index: number) {
@@ -49,7 +47,15 @@
       <td></td>
       <td></td>
       <td>
-        <button>+</button>
+        <button
+          class="btn btn-icon p-2 variant-ghost"
+          on:click={addNewItem}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+            <path d="M12 4V20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M4 12H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
       </td>
     </tr>
 
