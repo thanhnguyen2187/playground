@@ -1,4 +1,10 @@
+import { browser } from '$app/environment'
+
 export function addShakeTracking(executeFn: () => void) {
+  if (!browser) {
+    return
+  }
+
   if (typeof window.DeviceMotionEvent != 'undefined') {
     // Shake sensitivity (a lower number is more)
     const sensitivity = 16;

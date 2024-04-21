@@ -3,7 +3,7 @@ import { browser } from '$app/environment'
 import type { Item } from '$lib/data'
 import { loadItems, saveItems } from '$lib/data'
 
-const isMobile = browser && /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent)
+export const isMobile = browser && /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent)
 
 type Event = {
   type: 'Exit'

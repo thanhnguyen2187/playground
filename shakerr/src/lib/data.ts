@@ -1,3 +1,5 @@
+import { browser } from '$app/environment'
+
 export type Item = {
   key: string
   value: string
@@ -6,6 +8,9 @@ export type Item = {
 }
 
 export function loadItems() {
+  if (!browser) {
+    return []
+  }
   return JSON.parse(window.localStorage.getItem('shakerr-items') ?? '[]') as Item[]
 }
 
