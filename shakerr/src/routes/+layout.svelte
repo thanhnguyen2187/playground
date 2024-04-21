@@ -1,1 +1,9 @@
-<script>import "../app.pcss";</script><slot></slot>
+<script>
+  import "../app.pcss"
+  import { initializeStores, Modal } from '@skeletonlabs/skeleton'
+
+  initializeStores()
+</script>
+
+<Modal />
+<slot></slot>
