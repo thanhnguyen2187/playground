@@ -5,9 +5,12 @@
   import SettingsModal from '$lib/SettingsModal.svelte'
   import { derived, writable } from 'svelte/store'
   import type { Item } from '$lib/data'
+  import { addShakeTracking } from '$lib/shake'
 
   const {snapshot: snapshotStore, send} = useMachine(machine)
   const modalStore = getModalStore()
+
+  addShakeTracking(() => send({type: 'Shaked'}))
 
   $: {
     if ($snapshotStore.value === 'Desktop Warning') {
@@ -37,6 +40,9 @@
   function shake() {
     send({type: 'Shaked'})
   }
+  function reset() {
+    send({type: 'Reset'})
+  }
 
   const tick = writable(0, () => {
     let interval = setInterval(() => {
@@ -54,33 +60,34 @@
   const showResult = derived(snapshotStore, snapshot => typeof snapshot.value === 'object' && snapshot.value['Functioning'] === 'Show Result')
   const result = derived(snapshotStore, snapshot => snapshot.context.items[snapshot.context.pickedIndex])
   const backgroundColors = derived(snapshotStore, snapshot => snapshot.context.items.map(item => item.backgroundColor))
-  const colorStyle = derived([tick], () => {
-    const snapshot = $snapshotStore
-    if (typeof snapshot.value === 'object') {
-      if (snapshot.value['Functioning'] === 'Shaking') {
-        const randomIndex = Math.floor(Math.random() * snapshot.context.items.length)
-        return `background-color: ${snapshot.context.items[randomIndex].backgroundColor}; color: ${snapshot.context.items[randomIndex].textColor}`
-      } else if (snapshot.value['Functioning'] === 'Show Result') {
-        const pickedIndex = snapshot.context.pickedIndex
-        return `background-color: ${snapshot.context.items[pickedIndex].backgroundColor}; color: ${snapshot.context.items[pickedIndex].textColor}`
-      }
+  const colorStyle = derived(result, (item) => {
+    if (!item) {
+      return ``
     }
 
-    return ``
+    return `background-color: ${item.backgroundColor}; color: ${item.textColor}`
+  })
+  const textColor = derived(result, (item) => {
+    if (!item) {
+      return `#000000`
+    }
+
+    return item.textColor
   })
 </script>
 
-<div class="absolute">
-  {JSON.stringify($snapshotStore.value)}
-  {JSON.stringify($backgroundColors)}
-</div>
+<!--<div class="absolute">-->
+<!--  {JSON.stringify($snapshotStore.value)} <br/>-->
+<!--  {JSON.stringify($backgroundColors)}-->
+<!--  {JSON.stringify($snapshotStore.context)}-->
+<!--</div>-->
 
 <div class="absolute bottom-2 left-3 z-10">
   <button
     class="btn btn-icon p-2 variant-ghost"
     on:click={() => send({type: 'Open Settings'})}
   >
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color={$textColor} fill="none">
       <path
         d="M15.5 12C15.5 13.933 13.933 15.5 12 15.5C10.067 15.5 8.5 13.933 8.5 12C8.5 10.067 10.067 8.5 12 8.5C13.933 8.5 15.5 10.067 15.5 12Z"
         stroke="currentColor" stroke-width="1.5"/>
@@ -102,7 +109,7 @@
       class="btn btn-lg"
       on:click={shake}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color={$textColor} fill="none">
         <path d="M5.5 9C5.5 5.70017 5.5 4.05025 6.4519 3.02513C7.40381 2 8.93587 2 12 2C15.0641 2 16.5962 2 17.5481 3.02513C18.5 4.05025 18.5 5.70017 18.5 9V15C18.5 18.2998 18.5 19.9497 17.5481 20.9749C16.5962 22 15.0641 22 12 22C8.93587 22 7.40381 22 6.4519 20.9749C5.5 19.9497 5.5 18.2998 5.5 15V9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         <path d="M12 19H12.009" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M11 5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -116,7 +123,7 @@
       class="btn btn-lg"
       on:click={shake}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color={$textColor} fill="none">
         <path d="M5.5 9C5.5 5.70017 5.5 4.05025 6.4519 3.02513C7.40381 2 8.93587 2 12 2C15.0641 2 16.5962 2 17.5481 3.02513C18.5 4.05025 18.5 5.70017 18.5 9V15C18.5 18.2998 18.5 19.9497 17.5481 20.9749C16.5962 22 15.0641 22 12 22C8.93587 22 7.40381 22 6.4519 20.9749C5.5 19.9497 5.5 18.2998 5.5 15V9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         <path d="M12 19H12.009" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M11 5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -130,7 +137,7 @@
       class="btn btn-lg"
       on:click={shake}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="#000000" fill="none">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color={$textColor} fill="none">
         <path d="M5.5 9C5.5 5.70017 5.5 4.05025 6.4519 3.02513C7.40381 2 8.93587 2 12 2C15.0641 2 16.5962 2 17.5481 3.02513C18.5 4.05025 18.5 5.70017 18.5 9V15C18.5 18.2998 18.5 19.9497 17.5481 20.9749C16.5962 22 15.0641 22 12 22C8.93587 22 7.40381 22 6.4519 20.9749C5.5 19.9497 5.5 18.2998 5.5 15V9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         <path d="M12 19H12.009" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M11 5H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -139,12 +146,22 @@
       </svg>
       <span>Shake again?</span>
     </button>
-    <div class="text-lg">
-      {$result.value}
-    </div>
+    {#if $result.value}
+      <div class="text-lg">
+        The result you got is: "{$result.value}"
+      </div>
+    {/if}
+    <button
+      class="btn btn-lg"
+      on:click={reset}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" color="{$textColor}" fill="none">
+        <path d="M13.5 6V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M12 7.5C12 7.03406 12 6.80109 12.0761 6.61732C12.1776 6.37229 12.3723 6.17761 12.6173 6.07612C12.8011 6 13.0341 6 13.5 6C13.9659 6 14.1989 6 14.3827 6.07612C14.6277 6.17761 14.8224 6.37229 14.9239 6.61732C15 6.80109 15 7.03406 15 7.5V9.5C15 9.96594 15 10.1989 14.9239 10.3827C14.8224 10.6277 14.6277 10.8224 14.3827 10.9239C14.1989 11 13.9659 11 13.5 11C13.0341 11 12.8011 11 12.6173 10.9239C12.3723 10.8224 12.1776 10.6277 12.0761 10.3827C12 10.1989 12 9.96594 12 9.5V7.5Z" stroke="currentColor" stroke-width="1.5" />
+        <path d="M13.5 22C19.5 22 21 17.49 21 12C21 6.50998 19.5 2 13.5 2C7.49993 2 6 6.50996 6 12C6 17.49 7.49993 22 13.5 22Z" stroke="currentColor" stroke-width="1.5" />
+        <path d="M5 2C3.94531 3.13158 3.23544 4.50113 3 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+      <span>Click here reset</span>
+    </button>
   {/if}
 </div>
-
-
-
-

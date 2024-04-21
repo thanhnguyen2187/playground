@@ -13,9 +13,18 @@ export function saveItems(items: Item[]) {
   window.localStorage.setItem('shakerr-items', JSON.stringify(items))
 }
 
+export function generateUUID() {
+  const s4 = () => {
+    return Math.floor((1 + Math.random()) * 0x10000)
+    .toString(16)
+    .substring(1);
+  };
+  return s4() + s4() + "-" + s4() + "-" + s4() + "-" + s4() + "-" + s4() + s4() + s4();
+}
+
 export function createNewItem(): Item {
   return {
-    key: window.crypto.randomUUID().toString(),
+    key: generateUUID(),
     value: 'New',
     textColor: '#FFFFFF',
     backgroundColor: '#000000',

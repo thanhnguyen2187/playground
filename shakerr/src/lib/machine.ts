@@ -5,11 +5,21 @@ import { loadItems, saveItems } from '$lib/data'
 
 const isMobile = browser && /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent)
 
+type Event = {
+  type: 'Exit'
+  items: Item[]
+} | {
+  type: 'Exit'
+}
+
 export const machine = createMachine({
   types: {
     context: {} as {
-      items: Item[],
-      pickedIndex: number,
+      items: Item[]
+      pickedIndex: number
+      shakingUnitMs: number
+      shakingBuiltMs: number
+      shakingThresholdMs: number
     },
     events: {} as {
       type: 'Exit'
@@ -19,6 +29,9 @@ export const machine = createMachine({
   context: {
     items: [],
     pickedIndex: -1,
+    shakingBuiltMs: 0,
+    shakingUnitMs: 1000,
+    shakingThresholdMs: 3000,
   },
   id: 'Shakerr',
   initial: 'Transient',
@@ -64,44 +77,51 @@ export const machine = createMachine({
         'No Result': {
           on: {
             Shaked: {
-              actions: assign({
-                pickedIndex: ({context}) => {
-                  return Math.floor(Math.random() * context.items.length)
-                },
-              }),
               target: 'Shaking',
             },
           },
         },
         Shaking: {
+          always: [
+            {
+              guard: ({context}) => {
+                return context.shakingBuiltMs >= context.shakingThresholdMs
+              },
+              target: 'Show Result',
+            },
+          ],
           on: {
             Shaked: {
               actions: assign({
-                pickedIndex: ({context}) => {
-                  return Math.floor(Math.random() * context.items.length)
-                },
+                shakingBuiltMs: () => 0,
               }),
-              target: 'Shaking',
               reenter: true,
             },
           },
           after: {
-            '1500': {
-              target: 'Show Result',
+            500: {
+              actions: assign({
+                shakingBuiltMs: ({context}) => context.shakingBuiltMs + context.shakingUnitMs,
+                pickedIndex: ({context}) => Math.floor(Math.random() * context.items.length),
+              }),
+              target: 'Shaking',
+              reenter: true,
             },
-          },
+          }
         },
         'Show Result': {
           on: {
             Shaked: {
               actions: assign({
-                pickedIndex: ({context}) => {
-                  return Math.floor(Math.random() * context.items.length)
-                },
+                shakingBuiltMs: () => 0,
               }),
               target: 'Shaking',
             },
             Reset: {
+              actions: assign({
+                shakingBuiltMs: () => 0,
+                pickedIndex: -1,
+              }),
               target: 'No Result',
             },
           },
