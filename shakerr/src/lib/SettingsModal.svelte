@@ -5,7 +5,7 @@
   import { onDestroy } from 'svelte';
 
   export let items: Item[] = []
-  export let saveItemsFn: (items: Item[]) => void
+  export let saveItemsFn: (items: Item[]) => void = () => {}
 
   function addNewItem() {
     items = [...items, createNewItem()]
@@ -24,6 +24,11 @@
 </script>
 
 <div class="w-modal">
+  <button
+    class="badge-icon absolute top-2 right-2"
+  >
+    <i class="fa-xl fa-solid fa-close"></i>
+  </button>
   <table class="table table-hover">
     <thead>
     <tr>

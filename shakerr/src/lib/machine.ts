@@ -8,8 +8,6 @@ const isMobile = browser && /iPhone|iPad|iPod|Android/i.test(window.navigator.us
 type Event = {
   type: 'Exit'
   items: Item[]
-} | {
-  type: 'Exit'
 }
 
 export const machine = createMachine({
@@ -143,7 +141,7 @@ export const machine = createMachine({
       initial: 'Idling',
       on: {
         Exit: {
-          target: 'Functioning.History',
+          target: 'Functioning',
           actions: assign({
             items: ({event}) => {
               saveItems(event.items)

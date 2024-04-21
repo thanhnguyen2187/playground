@@ -28,9 +28,7 @@
           ref: SettingsModal,
           props: {
             items: $snapshotStore.context.items,
-            saveItemsFn: (items: Item[]) => {
-              send({type: 'Exit', items})
-            }
+            saveItemsFn: (items: Item[]) => send({type: 'Exit', items})
           }
         },
       })
@@ -130,7 +128,7 @@
         <path d="M22 8.5C22 8.5 21 8.846 21 9.8125C21 10.779 22 11.0335 22 12C22 12.9665 21 13.221 21 14.1875C21 15.154 22 15.5 22 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M2 8.5C2 8.5 3 8.846 3 9.8125C3 10.779 2 11.0335 2 12C2 12.9665 3 13.221 3 14.1875C3 15.154 2 15.5 2 15.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
-      <span>Shaking it, but feel free to prolong the process!</span>
+      <span>Shaking it!</span>
     </button>
   {:else if $showResult}
     <button
