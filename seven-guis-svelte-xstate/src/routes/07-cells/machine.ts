@@ -93,11 +93,11 @@ export function findCellIndex(label: string): [number, number] {
   return [rowIndex, columnIndex]
 }
 
-export function isDerivedValue() {
-
-}
-
-export function generateCellValues(rowHeaders: string[], columnHeaders: string[], contextValues: CellInputMap) {
+export function generateCellValues(
+  rowHeaders: string[],
+  columnHeaders: string[],
+  contextValues: CellInputMap,
+) {
   const cellValues: string[][] = []
   for (let i = 0; i < rowHeaders.length; i++) {
     cellValues.push([])

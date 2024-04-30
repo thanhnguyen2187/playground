@@ -12,13 +12,13 @@
     const value = (e.target as HTMLInputElement).value
     const key = generateKey(rowIndex, columnIndex)
     send({
-      type: 'values.set',
+      type: 'cellInputs.set',
       key, value,
     })
   }
 </script>
 
-{JSON.stringify($contextStore.values)}
+{JSON.stringify($contextStore)}
 
 <table>
   <thead>
