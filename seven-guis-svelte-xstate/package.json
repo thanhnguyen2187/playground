@@ -24,6 +24,7 @@
 	"type": "module",
 	"dependencies": {
 		"@xstate/svelte": "^3.0.2",
+		"ts-pattern": "^5.1.1",
 		"xstate": "^5.9.1"
 	}
 }
