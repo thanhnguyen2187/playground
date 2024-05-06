@@ -1,33 +1,86 @@
-export type CellState =
+import { match, P } from 'ts-pattern'
+
+export type CellType =
   | 'plain'
   | 'valid-formula'
   | 'invalid-formula'
 
-export type Cell = {
+export type CellCoordinates = {
   rowIndex: number
   columnIndex: number
-  value: string
 }
 
-export type CellWithState =
+export type Cell =
+  CellCoordinates
+  & {
+    value: string
+  }
+
+export type CellTyped =
   Cell
   & {
-    state: CellState
+    type: CellType
   }
+
+export type ParseResult = |
+  {
+    type: 'valid-formula'
+    dependencies: CellCoordinates[]
+  } |
+  {
+    type: 'invalid-formula'
+  } |
+  {
+    type: 'plain'
+  }
+
+export type ParseNode = {}
+export type ParseTree = {}
+
+export type EvaluateResult = {
+}
 
 export type Core = {
   input(cell: Cell): void
-  output(): CellWithState[]
+  output(): CellTyped[]
+}
+
+export function generateKey(rowIndex: number, columnIndex: number) {
+  return `${rowIndex},${columnIndex}`
+}
+
+export function parseCellValue(value: string): ParseResult {
+  if (value.startsWith('=')) {
+    const tokens = value.slice(1).split(' ').filter(token => token.length > 0)
+    const stack = []
+    for (const token of tokens) {
+      if (['+', '-', '/', '*'].includes(token)) {
+
+      }
+    }
+  }
+
+  return {
+    type: 'plain',
+  }
+}
+
+export function parseTokens(tokens: string[]): ParseResult {
+  return {
+    type: 'plain',
+  }
 }
 
 export function createCore(): Core {
-  const cellsRaw = new Map<number, Map<number, string>>()
-  const cellsTree = []
+  const cellsRaw: {[key: string]: string} = {}
+  const cellsParsed: {[key: string]: CellTyped} = {}
+  const cellTrees = []
 
   return {
     input(cell: Cell) {
+      const key = generateKey(cell.rowIndex, cell.columnIndex)
     },
-    output(): CellWithState[] {
+    output(): CellTyped[] {
       return []
     },
   }
