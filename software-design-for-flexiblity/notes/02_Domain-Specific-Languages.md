@@ -1,5 +1,49 @@
 # 2. Domain-Specific Languages
 
+> One powerful strategy for building flexibility into a programming project is
+> to create a *domain-specific language* that captures the conceptual structure
+> of the subject matter of the programs to be developed. A domain-specific
+> language is an abstraction in which the nouns and verbs of the language are
+> directly related to the problem domain. Such a language allows an application
+> program to be written directly in terms of the domain. By its nature, a
+> domain-specific language implements a fairly complete model of the domain, in
+> excess of what is needed for a particular application. Although this may seem
+> like extra work that is not essential to the particular problem at hand, it is
+> often less work than writing a monolithic program, and the resulting program
+> is much easier to modify, debug, and extend.
+>
+> So a domain-specific language layer is built to support more than just the
+> development of a particular program.
+> 
+> - It provides a general framework for the construction of a variety of related
+>   programs that share the domain of discourse.
+> - It simplifies the process of extending an existing application in that
+>   domain.
+> - And it provides a substrate that allows related applications to cooperate.
+>
+> [...]
+
+## 2.1 Combinators
+
+> Biological systems achieve much of their adapability through the use of very
+> general parts (cells) that are dynamically configured and consequently able to
+> adjust as their environment changes. Computational systems usually do not use
+> this strategy, instead relying on a hierachy of custom parts and combinations.
+> In recent years, large libraries of well-specified higher-level parts have
+> raised the abstraction level of this activity. But the means of combination
+> are rarely abstracted or shared, other than as "patterns".
+>
+> [...]
+>
+> A *system of combinators* is
+>
+> - set of primitive parts and
+> - a set of means of combining parts such that
+>   - the interface specifications of the combinations are the same as those of
+>     the primitives.
+>
+> [...]
+
 ```scheme
 (define (compose f g)
   (lambda args
@@ -46,16 +90,3 @@
 > descriptions to identify the vegetable. These can be neatly composed with
 > `parallel-combine`.
 
----
-
-*Exercise 2.1: Arity repair*
-
-The procedures *compose* and *parallel-combine* that we have introduced do not
-obey the requirement that they advertise the arity of the combination. Thus they
-would not be good citizens of our family of combinators. Fix the implementation
-of *compose* and *parallel-combine* shown above, so that:
-
-- they check their components to make sure that the arities are compatible;
-- the combination they construct checks that it is given the correct number of
-  arguments when it is called;
-- the combination advertises its arity correctly for *get-arity*.
