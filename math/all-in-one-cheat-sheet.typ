@@ -81,7 +81,13 @@ $ f'(x) = lim_(h -> 0) ((f(x+h) - f(x)) / h) $
 
     === Basic formulas
 
-    #box([$ (e^x)' = e^x $])
+    #block(
+      [
+        #box([$ (e^x)' = e^x $])
+        #h(8pt)
+        #box([$ (e^f(x))' = e^f(x) f'(x) $])
+      ]
+    )
     #block(
       [
         #box([$ x^n ' = n x^(n - 1) $])
@@ -94,13 +100,15 @@ $ f'(x) = lim_(h -> 0) ((f(x+h) - f(x)) / h) $
         #box([$ ln(x) ' = 1/x $])
         #h(8pt)
         #box([$ log_(a)x ' = 1/(x ln(a)) $])
+        #h(8pt)
+        #box([$ ln(g(x)) ' = (g'(x))/g(x) $])
       ]
     )
     #block([$
       (f(x) dot g(x))' = f'(x) dot g(x) + f(x) dot g'(x)
     $])
     #block([$
-      (f(x) / g(x))' = (f'(x) dot g(x) + f(x) dot g'(x)) / (g^2(x))
+      (f(x) / g(x))' = (f'(x) dot g(x) - f(x) dot g'(x)) / (g^2(x))
     $])
     #block([$
       (f(g(x)))' = f'(g(x)) dot g'(x)
@@ -126,6 +134,18 @@ Common derivatives:
 Common integrals:
 
 - TBA
+
+==== Miscellanies
+
+- On writing sums, "sort" the terms by their degrees descending.
+
+For example:
+
+#box($ x^3 + 2x^2 + 3 "instead of" 2x^2 + 3 + x^3 $)
+
+- On writing products, "sort" the terms alphabetically.
+
+#box($ x^2 y z^4 "instead of" z^4 x^2 y $)
 
 ==== Fundamental Theorem of Calculus
 

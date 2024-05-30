@@ -39,3 +39,54 @@
   #box($ = sin'(g(x)) dot g'(x) $) \
   #box($ = cos(3x^2 + 2x) dot 6x + 2 $) \
 ])
+
+=== Problem 5: #box($ f(x) = e^2x $)
+
+#block([
+  #box($ f(x) = e^(2x) $) \
+  #box($ f'(x) = (2x)' e^(2x) $) \
+  #box($ = 2 e^(2x) $) \
+])
+
+=== Problem 6: #box($ f(x) = ln(x^2 + 1) $)
+
+#block([
+  #box($
+    f(x) &= ln(x^2 + 1) \
+    f'(x) &= (x^2 + 1)' / (x^2 + 1) \
+    &= (2x) / (x^2 + 1) \
+  $) \
+])
+
+=== Problem 7: #box($ f(x) = ln(x^2 + 1) $)
+
+#block([
+  #box($
+    f(x) &= ln(x^2 + 1) \
+    f'(x) &= (x^2 + 1)' / (x^2 + 1) \
+    &= (2x) / (x^2 + 1) \
+  $) \
+])
+
+=== Problem 8: #box($ f(x) = sin(x) / cos(x) $)
+
+#block([
+  #box($
+    f(x) &= sin(x) / cos(x) \
+    f'(x) &= (sin'(x) cos(x) - sin(x) cos'(x)) / (cos^2 x) \
+          &= (cos(x) cos(x) + sin(x) sin(x)) / (cos^2 x) \
+          &= (cos^2 x + sin^2 x) / (cos^2 x) \
+          &= 1 / (cos^2(x)) \
+  $) \
+])
+
+=== Problem 9: #box($ f(x) = x^2 e^x $)
+
+#block([
+  #box($
+    f(x) &= x^2 e^x \
+    f'(x) &= (x^2)' e^x + x^2 (e^x)' \
+          &= 2x e^x + x^2 e^x \
+          &= e^x (x^2 + 2x) \
+  $) \
+])
