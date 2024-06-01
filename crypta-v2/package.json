@@ -6,6 +6,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
+    "prepare": "npm run build",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest"
@@ -22,6 +23,7 @@
     "@tailwindcss/typography": "0.5.13",
     "@types/node": "20.12.13",
     "autoprefixer": "10.4.19",
+    "drizzle-kit": "^0.22.1",
     "globals": "^15.0.0",
     "postcss": "8.4.38",
     "svelte": "^4.2.7",
@@ -38,7 +40,10 @@
   "dependencies": {
     "@floating-ui/dom": "1.6.5",
     "@xstate/svelte": "^3.0.3",
+    "drizzle-orm": "^0.31.0",
     "highlight.js": "11.9.0",
+    "msw": "^2.3.0",
+    "wa-sqlite": "https://github.com/rhashimoto/wa-sqlite/archive/refs/tags/v0.9.13.tar.gz",
     "xstate": "^5.13.0"
   }
 }
