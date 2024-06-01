@@ -21,10 +21,6 @@ afterAll(() => {
 
 describe('happy path', async () => {
 
-  // it('basic query', async () => {
-  //   expect(1 + 1).toBe(2)
-  // })
-
   let sqliteAPI: SQLiteAPI
   let executor: WASQLiteExecutor
   let localDb: SqliteRemoteDatabase
