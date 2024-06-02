@@ -1,6 +1,8 @@
 <script lang="ts">
 import "../app.postcss";
 import { AppShell, AppBar } from "@skeletonlabs/skeleton";
+import { Fa } from "svelte-fa";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
 // Highlight JS
 // import hljs from "highlight.js/lib/core";
@@ -38,9 +40,9 @@ storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 			<svelte:fragment slot="lead">
 				<strong class="text-xl uppercase">Crypta</strong>
 			</svelte:fragment>
-			<div class="input-group input-group-divider mb-2">
+			<div class="input-group input-group-divider grid-cols-[auto_1fr]">
         <div class="input-group-shim">
-          <i class="fa-solid fa-search"></i>
+					<Fa icon={faSearch} />
         </div>
         <input
           type="text"
