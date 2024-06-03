@@ -7,10 +7,11 @@ const client = new TriplitClient();
 let result = "loading...";
 
 (async () => {
-	const insertResult = await client.insert("notes", { title: "Hello world" });
+	await client.insert("notes", { title: "Hello world" });
 	await client.insert("notes", { title: "Goodbye world" });
+  await client.insert("notes", { title: "Yes" });
 	const query = client.query("notes").select(["id", "title"]).build();
-	result = await client.fetch(query, { policy: "local-only" });
+	result = Object.fromEntries(await client.fetch(query))
 })();
 </script>
 
