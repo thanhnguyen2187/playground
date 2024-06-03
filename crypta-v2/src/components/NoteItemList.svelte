@@ -15,19 +15,18 @@ import { useMachine } from "@xstate/svelte";
 import { machine } from "$lib/machine-note-item";
 
 export let title = "Unnamed";
-
-const { snapshot, send } = useMachine(machine);
+let state: "idling" | "locked" | "unlocked" = "idling";
 
 function sendEventEncrypted() {
-	send({ type: "Encrypted" });
+  state = "locked";
 }
 
 function sendEventDecrypted() {
-	send({ type: "Decrypted" });
+  state = "unlocked";
 }
 
 function sendEventCleared() {
-  send({ type: "Cleared" });
+  state = "idling";
 }
 </script>
 
@@ -36,26 +35,36 @@ function sendEventCleared() {
     {title}
   </div>
   <div class="flex items-center gap-2">
-    {#if $snapshot.matches('Idling')}
-      <Fa icon={faEdit}></Fa>
-      <Fa icon={faCopy}></Fa>
+    {#if state === "idling"}
+      <button>
+        <Fa icon={faEdit}></Fa>
+      </button>
+      <button>
+        <Fa icon={faCopy}></Fa>
+      </button>
       <button on:click={sendEventEncrypted}>
         <Fa icon={faLock}></Fa>
       </button>
-    {:else if $snapshot.matches('Locked')}
+    {:else if state === "locked"}
       <button on:click={sendEventDecrypted}>
         <Fa icon={faUnlock}></Fa>
       </button>
       <button on:click={sendEventCleared}>
         <Fa icon={faKey}></Fa>
       </button>
-    {:else if $snapshot.matches('Unlocked')}
-      <Fa icon={faEdit}></Fa>
+    {:else if state === "unlocked"}
+      <button>
+        <Fa icon={faEdit}></Fa>
+      </button>
+      <button>
       <Fa icon={faCopy}></Fa>
+      </button>
       <button on:click={sendEventCleared}>
         <Fa icon={faKey}></Fa>
       </button>
     {/if}
-    <Fa icon={faTrashCan}></Fa>
+    <button>
+      <Fa icon={faTrashCan}></Fa>
+    </button>
   </div>
 </div>
