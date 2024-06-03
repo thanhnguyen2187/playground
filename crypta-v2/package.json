@@ -40,6 +40,7 @@
     "@floating-ui/dom": "1.6.5",
     "@fortawesome/free-brands-svg-icons": "^6.5.2",
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@triplit/client": "^0.3.53",
     "@xstate/svelte": "^3.0.3",
     "drizzle-orm": "^0.31.0",
     "highlight.js": "11.9.0",
