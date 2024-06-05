@@ -13,6 +13,7 @@ import {
 import { Fa } from "svelte-fa";
 import { useMachine } from "@xstate/svelte";
 import { machine } from "$lib/machine-note-item";
+import { InputChip } from '@skeletonlabs/skeleton';
 
 export let title = "Unnamed";
 let state: "idling" | "locked" | "unlocked" = "idling";
@@ -30,9 +31,17 @@ function sendEventCleared() {
 }
 </script>
 
-<div class="bg-surface-500 p-2 border rounded flex justify-between gap-2 w-80">
-  <div>
-    {title}
+<div class="bg-surface-500 p-2 border rounded flex justify-between gap-2">
+  <div class="w-60 flex items-center">
+    <span class="truncate">{title}</span>
+  </div>
+  <div class="w-40 truncate">
+      <span class="chip variant-ghost-secondary">tag-1</span>
+      <span class="chip variant-ghost-secondary">tag-2</span>
+      <span class="chip variant-ghost-secondary">tag-3</span>
+    </div>
+  <div class="w-40 flex items-center">
+    {new Date().toLocaleString()}
   </div>
   <div class="flex items-center gap-2">
     {#if state === "idling"}
