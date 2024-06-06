@@ -1,8 +1,23 @@
 <script lang="ts">
 import "../app.postcss";
-import { AppShell, AppBar } from "@skeletonlabs/skeleton";
+import {
+	AppShell,
+	AppBar,
+	storePopup,
+	initializeStores,
+	Toast,
+	Modal,
+} from "@skeletonlabs/skeleton";
 import { Fa } from "svelte-fa";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import {
+	computePosition,
+	autoUpdate,
+	flip,
+	shift,
+	offset,
+	arrow,
+} from "@floating-ui/dom";
 
 // Highlight JS
 // import hljs from "highlight.js/lib/core";
@@ -20,18 +35,12 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 // storeHighlightJs.set(hljs);
 
 // Floating UI for Popups
-import {
-	computePosition,
-	autoUpdate,
-	flip,
-	shift,
-	offset,
-	arrow,
-} from "@floating-ui/dom";
-import { storePopup } from "@skeletonlabs/skeleton";
+initializeStores();
 storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 </script>
 
+<Toast/>
+<Modal/>
 <!-- App Shell -->
 <AppShell>
 	<svelte:fragment slot="header">

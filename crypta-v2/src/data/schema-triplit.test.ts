@@ -4,15 +4,15 @@ import { TriplitClient } from "@triplit/client";
 
 describe("happy path", () => {
 	const client = new TriplitClient({ schema });
+	const note = {
+		title: "Hello, World!",
+		text: "This is a note.",
+		encrypted: false,
+		tags: [],
+		updatedAt: new Date(),
+		createdAt: new Date(),
+	};
 	it("crud", async () => {
-		const note = {
-			title: "Hello, World!",
-			text: "This is a note.",
-			encrypted: false,
-			tags: [],
-			updatedAt: new Date(),
-			createdAt: new Date(),
-		};
 		let insertedId = "";
 		// create
 		{
@@ -45,6 +45,21 @@ describe("happy path", () => {
 				},
 			);
 			expect(resultUpdate.txId).toBeDefined();
+
+			const resultReadMap = await client.fetchById("notes", insertedId);
+			expect(resultReadMap).toBeDefined();
+			// biome-ignore lint/style/noNonNullAssertion: <explanation>
+			expect(resultReadMap!.text).toEqual(newText);
+		}
+		// upsert
+		{
+			const newText = "Other text.";
+			const resultInsert = await client.insert("notes", {
+				...note,
+				id: insertedId,
+				text: newText,
+			});
+			expect(resultInsert.txId).toBeDefined();
 
 			const resultReadMap = await client.fetchById("notes", insertedId);
 			expect(resultReadMap).toBeDefined();

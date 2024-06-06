@@ -10,6 +10,7 @@ import {
 	faTrashCan,
   faChain,
 } from "@fortawesome/free-solid-svg-icons";
+import { getToastStore } from '@skeletonlabs/skeleton';
 import { Fa } from "svelte-fa";
 import { useMachine } from "@xstate/svelte";
 import { machine } from "$lib/machine-note-item";
@@ -18,8 +19,14 @@ import { InputChip } from '@skeletonlabs/skeleton';
 export let title = "Unnamed";
 let state: "idling" | "locked" | "unlocked" = "idling";
 
+const toastStore = getToastStore();
+
 function sendEventEncrypted() {
   state = "locked";
+  toastStore.trigger({
+    message: "Note encrypted",
+    background: "variant-filled-success",
+  })
 }
 
 function sendEventDecrypted() {

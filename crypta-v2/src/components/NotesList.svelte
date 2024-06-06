@@ -1,8 +1,8 @@
 <script lang="ts">
 import NoteItemList from "./NoteItemList.svelte";
-import type { Note } from "../data/schema-triplit";
+import type { NoteDisplay } from "../data/schema-triplit";
 
-export let notes: Note[] = [];
+export let notes: NoteDisplay[] = [];
 </script>
 
 <div class="flex flex-col gap-2">

@@ -1,5 +1,5 @@
-import { Schema as S } from "@triplit/client";
 import type { ClientSchema, Entity } from "@triplit/client";
+import { Schema as S } from "@triplit/client";
 
 export const schema = {
 	notes: {
@@ -20,9 +20,21 @@ export const schema = {
 			id: S.Id(),
 			noteId: S.String(),
 			tagText: S.String(),
+			updatedAt: S.Date({ default: S.Default.now() }),
+			createdAt: S.Date({ default: S.Default.now() }),
 		}),
 	},
 } satisfies ClientSchema;
 
-export type Note = Entity<typeof schema, 'notes'>
-export type NoteTag = Entity<typeof schema, 'noteTags'>
+export type Note = Entity<typeof schema, "notes">;
+export type NoteDisplay = {
+	id: string
+	title: string
+	text: string
+	tags: string[]
+	createdAt: Date,
+	updatedAt: Date,
+}
+export type NoteWithoutID = Exclude<Note, "id">;
+export type NoteTag = Entity<typeof schema, "noteTags">;
+export type NoteTagWithoutID = Exclude<NoteTag, "id">;
