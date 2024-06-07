@@ -2,11 +2,10 @@
 import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { InputChip } from "@skeletonlabs/skeleton";
 import { Fa } from "svelte-fa";
-import { createEmptyNoteDisplay } from "../data/data-transformation";
 import type { NoteDisplay } from "../data/schema-triplit";
 
-export let note: NoteDisplay = createEmptyNoteDisplay();
-export let actionSaveFn: () => void = () => {};
+export let note: NoteDisplay;
+export let actionSaveFn: () => void;
 </script>
 
 <div class="card w-modal relative">

@@ -15,8 +15,9 @@ import { Fa } from "svelte-fa";
 import { useMachine } from "@xstate/svelte";
 import { machine } from "$lib/machine-note-item";
 import { InputChip } from '@skeletonlabs/skeleton';
+import type { NoteDisplay } from '../data/schema-triplit';
 
-export let title = "Unnamed";
+export let note: NoteDisplay;
 let state: "idling" | "locked" | "unlocked" = "idling";
 
 const toastStore = getToastStore();
@@ -40,15 +41,18 @@ function sendEventCleared() {
 
 <div class="bg-surface-500 p-2 border rounded flex justify-between gap-2">
   <div class="w-60 flex items-center">
-    <span class="truncate">{title}</span>
+    <span class="truncate">{note.title}</span>
   </div>
   <div class="w-40 truncate">
-      <span class="chip variant-ghost-secondary">tag-1</span>
-      <span class="chip variant-ghost-secondary">tag-2</span>
-      <span class="chip variant-ghost-secondary">tag-3</span>
-    </div>
+    {#each note.tags as tag}
+      <span class="chip variant-ghost-secondary">{tag}</span>
+    {/each}
+    {#if note.tags.length === 0}
+      <span class="chip variant-ghost-secondary">no tag yet</span>
+    {/if}
+  </div>
   <div class="w-40 flex items-center">
-    {new Date().toLocaleString()}
+    {note.updatedAt.toLocaleString()}
   </div>
   <div class="flex items-center gap-2">
     {#if state === "idling"}
@@ -62,6 +66,9 @@ function sendEventCleared() {
         <Fa icon={faLock}></Fa>
       </button>
     {:else if state === "locked"}
+      <button class="invisible">
+        <Fa icon={faUnlock}></Fa>
+      </button>
       <button on:click={sendEventDecrypted}>
         <Fa icon={faUnlock}></Fa>
       </button>

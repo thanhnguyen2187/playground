@@ -7,6 +7,6 @@ export let notes: NoteDisplay[] = [];
 
 <div class="flex flex-col gap-2">
   {#each notes as note(note.id)}
-    <NoteItemList title={note.title} />
+    <NoteItemList note={note} />
   {/each}
 </div>
