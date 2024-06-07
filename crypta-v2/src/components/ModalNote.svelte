@@ -27,6 +27,7 @@ export let fnCancel: () => void;
         class="input"
         spellcheck="false"
         bind:value={note.title}
+        disabled={note.encrypted}
       />
     </label>
     <label class="label">
@@ -36,11 +37,16 @@ export let fnCancel: () => void;
         rows="8"
         spellcheck="false"
         bind:value={note.text}
+        disabled={note.encrypted}
       ></textarea>
     </label>
     <label>
       <span>Tags</span>
-      <InputChip name="tags" bind:value={note.tags}/>
+      <InputChip
+        name="tags"
+        bind:value={note.tags}
+        disabled={note.encrypted}
+      />
     </label>
     <label class="label">
       <span>ID</span>
@@ -71,6 +77,7 @@ export let fnCancel: () => void;
     <button
       class="btn variant-filled"
       on:click={fnSubmit}
+      disabled={note.encrypted}
     >
       Save
     </button>
