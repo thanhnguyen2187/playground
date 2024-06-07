@@ -100,7 +100,9 @@ export const machine = setup({
 						Modal: {
 							initial: "None",
 							on: {
-								ModalCancel: {},
+								ModalCancel: {
+									target: ".None",
+								},
 							},
 							states: {
 								None: {},

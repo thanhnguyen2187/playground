@@ -14,23 +14,30 @@ import { createEmptyNoteDisplay } from "../data/data-transformation";
 import { notes } from "../data/mock";
 import { notesRead, notesUpsert } from "../data/queries-triplit";
 import { machine } from "../lib/machine-app";
+import type { NoteDisplay } from "../data/schema-triplit";
 
 const modalStore = getModalStore();
 const appMachine = useMachine(machine, {});
 const { snapshot: appSnapshot, send: appSend } = appMachine;
 
-(async () => {
+async function itemsLoad() {
 	try {
 		const notes = await notesRead(globalClient, 10);
 		appSend({ type: "Loaded", notes });
 	} catch (e) {
 		appSend({ type: "FailedData" });
+		console.error(e);
 	}
-})();
+}
 
-function modalOpenNote() {
-  // NOTE: this is kind of a... magic way to do it, as we use Svelte's own
-  //       reactivity system to mutate `note` within the opened component.
+function fnModalClose() {
+  modalStore.close();
+  appSend({ type: "ModalCancel" });
+}
+
+function fnModalOpenNoteCreate() {
+	// NOTE: this is kind of a... magic way to do it, as we use Svelte's own
+	//       reactivity system to mutate `note` within the opened component.
 	const note = createEmptyNoteDisplay();
 	appSend({ type: "ModalOpenNote", note });
 	// TODO: try catch in case it doesn't work?
@@ -40,20 +47,41 @@ function modalOpenNote() {
 			ref: ModalNote,
 			props: {
 				note,
-				actionSaveFn: async () => {
+        fnCancel: fnModalClose,
+				fnSubmit: async () => {
 					await notesUpsert(globalClient, note);
-					modalStore.close();
 					appSend({ type: "Reload" });
-					const notes = await notesRead(globalClient, 10);
-					appSend({ type: "Loaded", notes });
+					modalStore.close();
+					await itemsLoad();
 				},
 			},
 		},
-		response: async () => {
-			appSend({ type: "ModalCancel" });
-		},
+		response: () => appSend({ type: "ModalCancel" }),
 	});
 }
+
+function fnModalOpenNoteUpdate(note: NoteDisplay) {
+  appSend({ type: "ModalOpenNote", note });
+  modalStore.trigger({
+    type: "component",
+    component: {
+      ref: ModalNote,
+      props: {
+        note,
+        fnCancel: fnModalClose,
+        fnSubmit: async () => {
+          await notesUpsert(globalClient, note);
+          appSend({ type: "Reload" });
+          modalStore.close();
+          await itemsLoad();
+        },
+      },
+    },
+    response: () => appSend({ type: "ModalCancel" }),
+  });
+}
+
+itemsLoad();
 </script>
 
 {JSON.stringify($appSnapshot.value)}
@@ -66,7 +94,7 @@ function modalOpenNote() {
   </button>
   <button
     class="btn-icon variant-filled-secondary absolute bottom-6 right-6"
-    on:click={modalOpenNote}
+    on:click={fnModalOpenNoteCreate}
   >
     <Fa icon={faAdd} size="lg"/>
   </button>
@@ -76,12 +104,12 @@ function modalOpenNote() {
   {#if $appSnapshot.matches("Functioning.Loading")}
   <ProgressRadial value={undefined} />
   {:else if $appSnapshot.matches("Functioning.Idling.Items.Blank")}
-    <span>
+    <p>
       There is nothing here for now.<br/>
-      You might want to <button class="underline" on:click={modalOpenNote}>create one</button>?
-    </span>
+      You might want to <button class="underline" on:click={fnModalOpenNoteCreate}>create one</button>?
+    </p>
   {:else if $appSnapshot.matches("Functioning.Idling.Items.Filled")}
-    <NotesList notes={$appSnapshot.context.notes} />
+    <NotesList notes={$appSnapshot.context.notes} fnUpdate={fnModalOpenNoteUpdate} />
   {:else}
     Error
   {/if}

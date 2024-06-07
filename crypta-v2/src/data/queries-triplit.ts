@@ -22,6 +22,7 @@ export async function notesRead(
 			.from((note.tags ?? new Map()).values())
 			// @ts-ignore
 			.map((tag: NoteTag) => tag.tagText)
+			.sort()
 		),
 	}));
 	return noteDisplays as NoteDisplay[];

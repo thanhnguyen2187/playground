@@ -3,14 +3,20 @@ import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { InputChip } from "@skeletonlabs/skeleton";
 import { Fa } from "svelte-fa";
 import type { NoteDisplay } from "../data/schema-triplit";
+import { formatDate } from '$lib/date';
 
+// Use this to "receive" Skeleton's prop passing to this component. In case we
+// don't, a harmless warning would be raised.
+export let parent: unknown;
 export let note: NoteDisplay;
-export let actionSaveFn: () => void;
+export let fnSubmit: () => void;
+export let fnCancel: () => void;
 </script>
 
 <div class="card w-modal relative">
   <button
     class="badge-icon variant-ghost-secondary absolute top-3 right-3"
+    on:click={fnCancel}
   >
     <Fa icon={faClose} />
   </button>
@@ -47,7 +53,7 @@ export let actionSaveFn: () => void;
     <label class="label">
       <span>Date created</span>
       <input
-        value={note.createdAt.toLocaleString()}
+        value={formatDate(note.createdAt)}
         class="input"
         disabled
       />
@@ -55,7 +61,7 @@ export let actionSaveFn: () => void;
     <label class="label">
       <span>Last updated</span>
       <input
-        value={note.updatedAt.toLocaleString()}
+        value={formatDate(note.updatedAt)}
         class="input"
         disabled
       />
@@ -64,7 +70,7 @@ export let actionSaveFn: () => void;
   <footer class="card-footer flex flex-row-reverse">
     <button
       class="btn variant-filled"
-      on:click={actionSaveFn}
+      on:click={fnSubmit}
     >
       Save
     </button>

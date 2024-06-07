@@ -8,34 +8,37 @@ import {
 	faUnlock,
 	faKey,
 	faTrashCan,
-  faChain,
+	faChain,
 } from "@fortawesome/free-solid-svg-icons";
-import { getToastStore } from '@skeletonlabs/skeleton';
+import { getToastStore } from "@skeletonlabs/skeleton";
 import { Fa } from "svelte-fa";
 import { useMachine } from "@xstate/svelte";
 import { machine } from "$lib/machine-note-item";
-import { InputChip } from '@skeletonlabs/skeleton';
-import type { NoteDisplay } from '../data/schema-triplit';
+import { InputChip } from "@skeletonlabs/skeleton";
+import type { NoteDisplay } from "../data/schema-triplit";
+import { formatDate } from '$lib/date';
 
 export let note: NoteDisplay;
+export let fnUpdate: (note: NoteDisplay) => void;
+
 let state: "idling" | "locked" | "unlocked" = "idling";
 
 const toastStore = getToastStore();
 
 function sendEventEncrypted() {
-  state = "locked";
-  toastStore.trigger({
-    message: "Note encrypted",
-    background: "variant-filled-success",
-  })
+	state = "locked";
+	toastStore.trigger({
+		message: "Note encrypted",
+		background: "variant-filled-success",
+	});
 }
 
 function sendEventDecrypted() {
-  state = "unlocked";
+	state = "unlocked";
 }
 
 function sendEventCleared() {
-  state = "idling";
+	state = "idling";
 }
 </script>
 
@@ -55,11 +58,11 @@ function sendEventCleared() {
     {/if}
   </div>
   <div class="w-40 flex items-center">
-    {note.updatedAt.toLocaleString()}
+    {formatDate(note.updatedAt)}
   </div>
   <div class="flex items-center gap-2">
     {#if state === "idling"}
-      <button>
+      <button on:click={() => fnUpdate(note)}>
         <Fa icon={faEdit}></Fa>
       </button>
       <button>
