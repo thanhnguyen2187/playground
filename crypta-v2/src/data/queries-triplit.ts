@@ -11,7 +11,14 @@ export async function notesRead(
 	client: TriplitClient<any>,
 	limit: number,
 ): Promise<NoteDisplay[]> {
-	const query = client.query("notes").include("tags").limit(limit).build();
+	const query = (
+		client
+		.query("notes")
+		.include("tags")
+		.order("createdAt", "ASC")
+		.limit(limit)
+		.build()
+	);
 	// @ts-ignore
 	const result = await client.fetch(query);
 	const notes = Array.from(result.values());
