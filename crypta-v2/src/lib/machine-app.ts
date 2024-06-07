@@ -27,6 +27,7 @@ export const machine = setup({
 			| { type: "Loaded"; notes: NoteDisplay[] }
 			| { type: "Reload" }
 			| { type: "ModalOpenNote"; note: NoteDisplay }
+			| { type: "ModalOpenEncryption"; note: NoteDisplay }
 			| { type: "ModalCancel" },
 	},
 	guards: {
@@ -65,6 +66,9 @@ export const machine = setup({
 							actions: assign({
 								note: ({event}) => event.note,
 							})
+						},
+						ModalOpenEncryption: {
+							target: ".Modal.Encryption",
 						},
 						Reload: {
 							target: "Loading",

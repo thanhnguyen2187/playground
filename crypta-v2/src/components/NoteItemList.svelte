@@ -1,50 +1,140 @@
 <script lang="ts">
+import { formatDate } from "$lib/date";
+import { globalClient } from "$lib/global";
+import { machine } from "$lib/machine-note-item";
 import {
+	faChain,
 	faClipboard,
 	faClone,
 	faCopy,
 	faEdit,
-	faLock,
-	faUnlock,
 	faKey,
+	faLock,
 	faTrashCan,
-	faChain,
+	faUnlock,
 } from "@fortawesome/free-solid-svg-icons";
-import { getToastStore } from "@skeletonlabs/skeleton";
-import { Fa } from "svelte-fa";
+import {
+	InputChip,
+	getModalStore,
+	getToastStore,
+} from "@skeletonlabs/skeleton";
 import { useMachine } from "@xstate/svelte";
-import { machine } from "$lib/machine-note-item";
-import { InputChip } from "@skeletonlabs/skeleton";
+import { Fa } from "svelte-fa";
+import { aesGcmDecrypt } from "../data/encryption";
 import type { NoteDisplay } from "../data/schema-triplit";
-import { formatDate } from '$lib/date';
+import ModalEncryption from "./ModalEncryption.svelte";
+import { notesUpsert } from '../data/queries-triplit';
+
+const modalStore = getModalStore();
+const toastStore = getToastStore();
 
 export let note: NoteDisplay;
 export let fnUpdate: (note: NoteDisplay) => void;
+export let fnEncrypt: (note: NoteDisplay) => void;
 
-let state: "idling" | "locked" | "unlocked" = "idling";
+let state: "idling" | "encrypted" | "decrypted" = "idling";
 
-const toastStore = getToastStore();
-
-function sendEventEncrypted() {
-	state = "locked";
-	toastStore.trigger({
-		message: "Note encrypted",
-		background: "variant-filled-success",
+function decrypt() {
+	modalStore.trigger({
+		type: "component",
+		component: {
+			ref: ModalEncryption,
+			props: {
+				note,
+        showWarning: false,
+				fnCancel: modalStore.close,
+				fnSubmit: async (password: string) => {
+					try {
+						const decryptedText = await aesGcmDecrypt(note.text, password);
+						note.text = decryptedText;
+						note.encrypted = false;
+						state = "decrypted";
+            toastStore.trigger({
+              message: "Decrypted successfully!",
+              background: "variant-ghost-success",
+              timeout: 2000,
+            });
+					} catch (e: unknown) {
+						// @ts-ignore
+						if ("message" in e && e.message === "Decrypt failed") {
+							toastStore.trigger({
+								message: "Incorrect password!",
+								background: "variant-ghost-warning",
+								timeout: 2000,
+							});
+						} else {
+							console.error(e);
+						}
+					} finally {
+						modalStore.close();
+					}
+				},
+			},
+		},
 	});
 }
 
-function sendEventDecrypted() {
-	state = "unlocked";
+async function clear() {
+	if (state === "decrypted") {
+    await notesUpsert(globalClient, note);
+    state = "idling";
+	} else if (state === "encrypted") {
+    modalStore.trigger({
+      type: "component",
+      component: {
+        ref: ModalEncryption,
+        props: {
+          note,
+          showWarning: false,
+          fnCancel: modalStore.close,
+          fnSubmit: async (password: string) => {
+            try {
+              const decryptedText = await aesGcmDecrypt(note.text, password);
+              note.text = decryptedText;
+              note.encrypted = false;
+              state = "idling";
+              toastStore.trigger({
+                message: "Decrypted successfully!",
+                background: "variant-ghost-success",
+                timeout: 2000,
+              });
+              await notesUpsert(globalClient, note);
+            } catch (e: unknown) {
+              // @ts-ignore
+              if ("message" in e && e.message === "Decrypt failed") {
+                toastStore.trigger({
+                  message: "Incorrect password!",
+                  background: "variant-ghost-warning",
+                  timeout: 2000,
+                });
+              } else {
+                console.error(e);
+              }
+            } finally {
+              modalStore.close();
+            }
+          },
+        },
+      },
+    });
+  }
 }
 
-function sendEventCleared() {
-	state = "idling";
+$: {
+	if (note.encrypted && state === "idling") {
+		state = "encrypted";
+	}
 }
 </script>
 
 <div class="bg-surface-500 p-2 border rounded flex justify-between gap-2">
   <div class="w-60 flex items-center">
-    <span class="truncate">{note.title}</span>
+    <button
+      class="truncate"
+      on:click={() => fnUpdate(note)}
+    >
+      {note.title}
+    </button>
   </div>
   <div class="w-40 flex gap-2">
     {#each note.tags.slice(0, 2) as tag}
@@ -60,7 +150,8 @@ function sendEventCleared() {
   <div class="w-40 flex items-center">
     {formatDate(note.updatedAt)}
   </div>
-  <div class="flex items-center gap-2">
+  <!--TODO: improve the width of this to remove the redundant end gap-->
+  <div class="w-24 flex items-center gap-2">
     {#if state === "idling"}
       <button on:click={() => fnUpdate(note)}>
         <Fa icon={faEdit}></Fa>
@@ -68,27 +159,27 @@ function sendEventCleared() {
       <button>
         <Fa icon={faCopy}></Fa>
       </button>
-      <button on:click={sendEventEncrypted}>
+      <button on:click={() => fnEncrypt(note)}>
         <Fa icon={faLock}></Fa>
       </button>
-    {:else if state === "locked"}
+    {:else if state === "encrypted"}
       <button class="invisible">
+        <Fa icon={faEdit}></Fa>
+      </button>
+      <button on:click={decrypt}>
         <Fa icon={faUnlock}></Fa>
       </button>
-      <button on:click={sendEventDecrypted}>
-        <Fa icon={faUnlock}></Fa>
-      </button>
-      <button on:click={sendEventCleared}>
+      <button on:click={clear}>
         <Fa icon={faKey}></Fa>
       </button>
-    {:else if state === "unlocked"}
+    {:else if state === "decrypted"}
       <button>
         <Fa icon={faEdit}></Fa>
       </button>
       <button>
       <Fa icon={faCopy}></Fa>
       </button>
-      <button on:click={sendEventCleared}>
+      <button on:click={clear}>
         <Fa icon={faKey}></Fa>
       </button>
     {/if}
