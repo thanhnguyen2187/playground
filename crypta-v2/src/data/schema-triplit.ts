@@ -32,6 +32,7 @@ export type NoteDisplay = {
 	title: string
 	text: string
 	tags: string[]
+	encrypted: boolean,
 	createdAt: Date,
 	updatedAt: Date,
 }

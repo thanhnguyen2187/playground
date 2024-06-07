@@ -43,10 +43,13 @@ function sendEventCleared() {
   <div class="w-60 flex items-center">
     <span class="truncate">{note.title}</span>
   </div>
-  <div class="w-40 truncate">
-    {#each note.tags as tag}
+  <div class="w-40 flex gap-2">
+    {#each note.tags.slice(0, 2) as tag}
       <span class="chip variant-ghost-secondary">{tag}</span>
     {/each}
+    {#if note.tags.length > 2}
+      <span class="chip variant-ghost-secondary">...</span>
+    {/if}
     {#if note.tags.length === 0}
       <span class="chip variant-ghost-secondary">no tag yet</span>
     {/if}

@@ -8,6 +8,7 @@ export function createEmptyNoteDisplay(): NoteDisplay {
     tags: [
       "tag-1", "tag-2"
     ],
+    encrypted: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   }
