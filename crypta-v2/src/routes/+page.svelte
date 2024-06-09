@@ -17,7 +17,7 @@ import {
 	encryptNote,
 } from "../data/data-transformation";
 import { notes } from "../data/mock";
-import { notesRead, notesUpsert } from "../data/queries-triplit";
+import { notesDelete, notesRead, notesUpsert } from "../data/queries-triplit";
 import { machine } from "../lib/machine-app";
 import type { NoteDisplay } from "../data/schema-triplit";
 
@@ -114,6 +114,24 @@ function fnModalEncryption(note: NoteDisplay) {
 	});
 }
 
+function fnModalConfirmDeletion(noteId: string) {
+  appSend({ type: "ModalConfirmDeletion" });
+  modalStore.trigger({
+    type: "confirm",
+    body: "Are you sure? Once the note is deleted, it can be hard to be retrieved!",
+    modalClasses: "!w-modal-slim",
+    response: async (result: boolean) => {
+      appSend({ type: "ModalCancel" })
+      if (result) {
+        await notesDelete(globalClient, noteId);
+        appSend({ type: "Reload" });
+        await itemsLoad();
+      }
+      modalStore.close();
+    },
+  });
+}
+
 itemsLoad();
 </script>
 
@@ -146,6 +164,7 @@ itemsLoad();
       notes={$appSnapshot.context.notes}
       fnUpdate={fnModalOpenNoteUpdate}
       fnEncrypt={fnModalEncryption}
+      fnDelete={fnModalConfirmDeletion}
     />
   {:else}
     Error

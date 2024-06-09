@@ -75,3 +75,25 @@ export async function notesUpsert(
 		}
 	});
 }
+
+export async function notesDelete(
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	client: TriplitClient<any>,
+	noteId: string,
+) {
+	await client.transact(async (tx) => {
+		await tx.delete("notes", noteId)
+		const query = (
+			client
+			.query("noteTags")
+			.select(["id"])
+			.where("noteId", "=", noteId)
+			.build()
+		);
+		const noteTagIdsMap = await tx.fetch(query);
+		const noteTagIds = Array.from(noteTagIdsMap.keys());
+		for (const noteTagId of noteTagIds) {
+			await tx.delete("noteTags", noteTagId);
+		}
+	})
+}

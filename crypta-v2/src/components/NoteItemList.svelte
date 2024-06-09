@@ -31,6 +31,7 @@ const toastStore = getToastStore();
 export let note: NoteDisplay;
 export let fnUpdate: (note: NoteDisplay) => void;
 export let fnEncrypt: (note: NoteDisplay) => void;
+export let fnDelete: (noteId: string) => void;
 
 let state: "idling" | "encrypted" | "decrypted" = "idling";
 
@@ -183,7 +184,7 @@ $: {
         <Fa icon={faKey}></Fa>
       </button>
     {/if}
-    <button>
+    <button on:click={() => fnDelete(note.id)}>
       <Fa icon={faTrashCan}></Fa>
     </button>
   </div>

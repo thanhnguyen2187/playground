@@ -28,6 +28,7 @@ export const machine = setup({
 			| { type: "Reload" }
 			| { type: "ModalOpenNote"; note: NoteDisplay }
 			| { type: "ModalOpenEncryption"; note: NoteDisplay }
+			| { type: "ModalConfirmDeletion" }
 			| { type: "ModalCancel" },
 	},
 	guards: {
@@ -69,6 +70,9 @@ export const machine = setup({
 						},
 						ModalOpenEncryption: {
 							target: ".Modal.Encryption",
+						},
+						ModalConfirmDeletion: {
+							target: ".Modal.Deletion",
 						},
 						Reload: {
 							target: "Loading",
@@ -112,6 +116,7 @@ export const machine = setup({
 								None: {},
 								Encryption: {},
 								Settings: {},
+								Deletion: {},
 								Note: {},
 							},
 						},
