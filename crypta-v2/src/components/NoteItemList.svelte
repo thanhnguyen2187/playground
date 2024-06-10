@@ -32,6 +32,7 @@ export let note: NoteDisplay;
 export let fnUpdate: (note: NoteDisplay) => void;
 export let fnEncrypt: (note: NoteDisplay) => void;
 export let fnDelete: (noteId: string) => void;
+export let fnTagAdd: (tag: string) => void;
 
 let state: "idling" | "encrypted" | "decrypted" = "idling";
 
@@ -139,7 +140,12 @@ $: {
   </div>
   <div class="w-40 flex gap-2">
     {#each note.tags.slice(0, 2) as tag}
-      <span class="chip variant-ghost-secondary">{tag}</span>
+      <button
+        class="chip variant-ghost-secondary"
+        on:click={() => fnTagAdd(tag)}
+      >
+        {tag}
+      </button>
     {/each}
     {#if note.tags.length > 2}
       <span class="chip variant-ghost-secondary">...</span>

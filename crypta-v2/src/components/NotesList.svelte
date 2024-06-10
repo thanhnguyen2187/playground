@@ -6,6 +6,7 @@ export let notes: NoteDisplay[] = [];
 export let fnUpdate: (note: NoteDisplay) => void;
 export let fnEncrypt: (note: NoteDisplay) => void;
 export let fnDelete: (noteId: string) => void;
+export let fnTagAdd: (tag: string) => void;
 </script>
 
 <div class="flex flex-col gap-2">
@@ -15,6 +16,7 @@ export let fnDelete: (noteId: string) => void;
       {fnUpdate}
       {fnEncrypt}
       {fnDelete}
+      {fnTagAdd}
     />
   {/each}
 </div>

@@ -1,117 +1,122 @@
 <script lang="ts">
-import { globalClient } from "$lib/global";
+  import { globalActor, globalClient } from "$lib/global";
 import { faAdd, faGear } from "@fortawesome/free-solid-svg-icons";
 import {
-	type ModalSettings,
-	ProgressRadial,
-	getModalStore,
-	getToastStore,
+  type ModalSettings,
+  ProgressRadial,
+  getModalStore,
+  getToastStore,
 } from "@skeletonlabs/skeleton";
-import { useMachine } from "@xstate/svelte";
+  import { useMachine, useSelector } from "@xstate/svelte";
 import { Fa } from "svelte-fa";
 import ModalNote from "../components/ModalNote.svelte";
 import ModalEncryption from "../components/ModalEncryption.svelte";
 import NotesList from "../components/NotesList.svelte";
 import {
-	createEmptyNoteDisplay,
-	encryptNote,
+  createEmptyNoteDisplay,
+  encryptNote,
 } from "../data/data-transformation";
-import { notes } from "../data/mock";
 import { notesDelete, notesRead, notesUpsert } from "../data/queries-triplit";
-import { machine } from "../lib/machine-app";
 import type { NoteDisplay } from "../data/schema-triplit";
 
 const modalStore = getModalStore();
 const toastStore = getToastStore();
-const appMachine = useMachine(machine, {});
-const { snapshot: appSnapshot, send: appSend } = appMachine;
+const appSend = globalActor.send;
+const tags = useSelector(globalActor, (state) => state.context.searchTags);
+const notes = useSelector(globalActor, (state) => state.context.notes);
+const currentStateValue = useSelector(globalActor, (state) => state.value);
+const currentState = useSelector(globalActor, (state) => state);
 
 async function itemsLoad() {
-	try {
-		const notes = await notesRead(globalClient, 10);
-		appSend({ type: "Loaded", notes });
-	} catch (e) {
-		appSend({ type: "FailedData" });
-		console.error(e);
-	}
+  try {
+    const notes = await notesRead(
+      globalClient,
+      10,
+      $tags,
+    );
+    appSend({ type: "Loaded", notes });
+  } catch (e) {
+    appSend({ type: "FailedData" });
+    console.error(e);
+  }
 }
 
 function fnModalClose() {
-	modalStore.close();
-	appSend({ type: "ModalCancel" });
+  modalStore.close();
+  appSend({ type: "ModalCancel" });
 }
 
 function fnModalOpenNoteCreate() {
-	// NOTE: this is kind of a... magic way to do it, as we use Svelte's own
-	//       reactivity system to mutate `note` within the opened component.
-	const note = createEmptyNoteDisplay();
-	appSend({ type: "ModalOpenNote", note });
-	// TODO: try catch in case it doesn't work?
-	modalStore.trigger({
-		type: "component",
-		component: {
-			ref: ModalNote,
-			props: {
-				note,
-				fnCancel: fnModalClose,
-				fnSubmit: async () => {
-					await notesUpsert(globalClient, note);
-					appSend({ type: "Reload" });
-					modalStore.close();
-					await itemsLoad();
-				},
-			},
-		},
-		response: () => appSend({ type: "ModalCancel" }),
-	});
+  // NOTE: this is kind of a... magic way to do it, as we use Svelte's own
+  //       reactivity system to mutate `note` within the opened component.
+  const note = createEmptyNoteDisplay();
+  appSend({ type: "ModalOpenNote", note });
+  // TODO: try catch in case it doesn't work?
+  modalStore.trigger({
+    type: "component",
+    component: {
+      ref: ModalNote,
+      props: {
+        note,
+        fnCancel: fnModalClose,
+        fnSubmit: async () => {
+          await notesUpsert(globalClient, note);
+          appSend({ type: "Reload" });
+          modalStore.close();
+          await itemsLoad();
+        },
+      },
+    },
+    response: () => appSend({ type: "ModalCancel" }),
+  });
 }
 
 function fnModalOpenNoteUpdate(note: NoteDisplay) {
-	appSend({ type: "ModalOpenNote", note });
-	modalStore.trigger({
-		type: "component",
-		component: {
-			ref: ModalNote,
-			props: {
-				note,
-				fnCancel: fnModalClose,
-				fnSubmit: async () => {
-					await notesUpsert(globalClient, note);
-					appSend({ type: "Reload" });
-					modalStore.close();
-					await itemsLoad();
-				},
-			},
-		},
-		response: () => appSend({ type: "ModalCancel" }),
-	});
+  appSend({ type: "ModalOpenNote", note });
+  modalStore.trigger({
+    type: "component",
+    component: {
+      ref: ModalNote,
+      props: {
+        note,
+        fnCancel: fnModalClose,
+        fnSubmit: async () => {
+          await notesUpsert(globalClient, note);
+          appSend({ type: "Reload" });
+          modalStore.close();
+          await itemsLoad();
+        },
+      },
+    },
+    response: () => appSend({ type: "ModalCancel" }),
+  });
 }
 
 function fnModalEncryption(note: NoteDisplay) {
-	appSend({ type: "ModalOpenEncryption", note });
-	modalStore.trigger({
-		type: "component",
-		component: {
-			ref: ModalEncryption,
-			props: {
-				note,
-				fnCancel: fnModalClose,
-				fnSubmit: async (password: string) => {
-					const encryptedNote = await encryptNote(note, password);
-					await notesUpsert(globalClient, encryptedNote);
-					toastStore.trigger({
-						message: "Encrypted successfully!",
-						background: "variant-ghost-success",
-						timeout: 2000,
-					});
-					appSend({ type: "Reload" });
-					modalStore.close();
-					await itemsLoad();
-				},
-			},
-		},
-		response: () => appSend({ type: "ModalCancel" }),
-	});
+  appSend({ type: "ModalOpenEncryption", note });
+  modalStore.trigger({
+    type: "component",
+    component: {
+      ref: ModalEncryption,
+      props: {
+        note,
+        fnCancel: fnModalClose,
+        fnSubmit: async (password: string) => {
+          const encryptedNote = await encryptNote(note, password);
+          await notesUpsert(globalClient, encryptedNote);
+          toastStore.trigger({
+            message: "Encrypted successfully!",
+            background: "variant-ghost-success",
+            timeout: 2000,
+          });
+          appSend({ type: "Reload" });
+          modalStore.close();
+          await itemsLoad();
+        },
+      },
+    },
+    response: () => appSend({ type: "ModalCancel" }),
+  });
 }
 
 function fnModalConfirmDeletion(noteId: string) {
@@ -121,7 +126,7 @@ function fnModalConfirmDeletion(noteId: string) {
     body: "Are you sure? Once the note is deleted, it can be hard to be retrieved!",
     modalClasses: "!w-modal-slim",
     response: async (result: boolean) => {
-      appSend({ type: "ModalCancel" })
+      appSend({ type: "ModalCancel" });
       if (result) {
         await notesDelete(globalClient, noteId);
         appSend({ type: "Reload" });
@@ -132,12 +137,17 @@ function fnModalConfirmDeletion(noteId: string) {
   });
 }
 
+async function fnTagAdd(tag: string) {
+  appSend({ type: "SearchTagAdd", tag });
+  await itemsLoad();
+}
+
 itemsLoad();
 </script>
 
-{JSON.stringify($appSnapshot.value)}
+{JSON.stringify($currentStateValue)}
 
-{#if $appSnapshot.matches("Functioning.Idling")}
+{#if $currentState.matches("Functioning.Idling")}
   <button
     class="btn-icon variant-filled-secondary absolute bottom-6 left-6"
   >
@@ -152,19 +162,20 @@ itemsLoad();
 {/if}
 
 <div class="container mt-6 mx-auto flex justify-center items-center">
-  {#if $appSnapshot.matches("Functioning.Loading")}
-  <ProgressRadial value={undefined} />
-  {:else if $appSnapshot.matches("Functioning.Idling.Items.Blank")}
+  {#if $currentState.matches("Functioning.Loading")}
+    <ProgressRadial value={undefined} />
+  {:else if $currentState.matches("Functioning.Idling.Items.Blank")}
     <p>
       There is nothing here for now.<br/>
       You might want to <button class="underline" on:click={fnModalOpenNoteCreate}>create one</button>?
     </p>
-  {:else if $appSnapshot.matches("Functioning.Idling.Items.Filled")}
+  {:else if $currentState.matches("Functioning.Idling.Items.Filled")}
     <NotesList
-      notes={$appSnapshot.context.notes}
+      notes={$notes}
       fnUpdate={fnModalOpenNoteUpdate}
       fnEncrypt={fnModalEncryption}
       fnDelete={fnModalConfirmDeletion}
+      fnTagAdd={fnTagAdd}
     />
   {:else}
     Error

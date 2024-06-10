@@ -18,6 +18,8 @@ import {
 	offset,
 	arrow,
 } from "@floating-ui/dom";
+import { useMachine } from '@xstate/svelte';
+import { machine } from '$lib/machine-app';
 
 // Highlight JS
 // import hljs from "highlight.js/lib/core";
@@ -37,6 +39,9 @@ import {
 // Floating UI for Popups
 initializeStores();
 storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
+
+const appMachine = useMachine(machine, {});
+const { snapshot: appSnapshot, send: appSend } = appMachine;
 </script>
 
 <Toast/>
