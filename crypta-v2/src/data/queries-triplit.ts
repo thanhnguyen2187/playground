@@ -11,7 +11,7 @@ export async function notesRead(
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   client: TriplitClient<any>,
   limit: number,
-  tags: string[],
+  tags: Set<string>,
 ): Promise<NoteDisplay[]> {
   let noteDisplays: NoteDisplay[] = [];
   await client.transact(async (tx) => {
@@ -20,7 +20,7 @@ export async function notesRead(
       .include("tags")
       .order("createdAt", "ASC")
       .limit(limit);
-    if (tags.length > 0) {
+    if (tags.size > 0) {
       let noteIds = [];
       {
         const query = client

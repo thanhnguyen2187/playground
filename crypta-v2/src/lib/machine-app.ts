@@ -7,7 +7,7 @@ export const machine = setup({
     context: {} as {
       notes: NoteDisplay[];
       note: NoteDisplay;
-      searchTags: string[];
+      searchTags: Set<string>;
     },
     events: {} as
       | { type: "Save" }
@@ -28,6 +28,7 @@ export const machine = setup({
       | { type: "Loaded"; notes: NoteDisplay[] }
       | { type: "Reload" }
       | { type: "SearchTagAdd"; tag: string }
+      | { type: "SearchTagRemove"; tag: string }
       | { type: "ModalOpenNote"; note: NoteDisplay }
       | { type: "ModalOpenEncryption"; note: NoteDisplay }
       | { type: "ModalConfirmDeletion" }
@@ -40,7 +41,7 @@ export const machine = setup({
   context: {
     notes: [],
     note: createEmptyNoteDisplay(),
-    searchTags: [],
+    searchTags: new Set(),
   },
   id: "AppState",
   initial: "Functioning",
@@ -86,10 +87,19 @@ export const machine = setup({
             SearchTagAdd: {
               target: "Loading",
               actions: assign({
-                searchTags: ({ event, context }) => [
-                  ...context.searchTags,
-                  event.tag,
-                ],
+                searchTags: ({ event, context }) => {
+                  context.searchTags.add(event.tag);
+                  return new Set(context.searchTags);
+                },
+              }),
+            },
+            SearchTagRemove: {
+              target: "Loading",
+              actions: assign({
+                searchTags: ({ event, context }) => {
+                  context.searchTags.delete(event.tag);
+                  return new Set(context.searchTags);
+                },
               }),
             },
           },

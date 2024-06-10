@@ -18,8 +18,10 @@ import {
 	offset,
 	arrow,
 } from "@floating-ui/dom";
-import { useMachine } from '@xstate/svelte';
-import { machine } from '$lib/machine-app';
+import { globalActor, globalClient } from '$lib/global';
+import { useSelector } from '@xstate/svelte';
+import { notesRead } from '../data/queries-triplit';
+import { derived } from 'svelte/store';
 
 // Highlight JS
 // import hljs from "highlight.js/lib/core";
@@ -40,8 +42,28 @@ import { machine } from '$lib/machine-app';
 initializeStores();
 storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
-const appMachine = useMachine(machine, {});
-const { snapshot: appSnapshot, send: appSend } = appMachine;
+const tags = useSelector(globalActor, (state) => state.context.searchTags);
+const tagsArray = derived(tags, (tags) => Array.from(tags.values()));
+const appSend = globalActor.send;
+
+async function itemsLoad() {
+	try {
+		const notes = await notesRead(
+			globalClient,
+			10,
+			$tags,
+		);
+		appSend({ type: "Loaded", notes });
+	} catch (e) {
+		appSend({ type: "FailedData" });
+		console.error(e);
+	}
+}
+
+function removeTag(tag: string) {
+	appSend({ type: "SearchTagRemove", tag });
+	itemsLoad();
+}
 </script>
 
 <Toast/>
@@ -54,7 +76,11 @@ const { snapshot: appSnapshot, send: appSend } = appMachine;
 			<svelte:fragment slot="lead">
 				<strong class="text-xl uppercase">Crypta</strong>
 			</svelte:fragment>
-			<div class="input-group input-group-divider grid-cols-[auto_1fr]">
+			<div
+				class="input-group input-group-divider"
+				class:grid-cols-[auto_1fr]={$tags.size === 0}
+				class:grid-cols-[auto_1fr_auto]={$tags.size !== 0}
+		 	>
         <div class="input-group-shim">
 					<Fa icon={faSearch} />
         </div>
@@ -62,6 +88,18 @@ const { snapshot: appSnapshot, send: appSend } = appMachine;
           type="text"
           placeholder="Search..."
         />
+				<div
+					class="flex gap-1"
+				>
+					{#each $tagsArray as tag}
+						<button
+							class="chip variant-filled"
+							on:click={() => removeTag(tag)}
+						>
+							{tag}
+						</button>
+					{/each}
+				</div>
       </div>
 			<svelte:fragment slot="trail">
 				<strong class="text-xl uppercase invisible">Crypta</strong>
