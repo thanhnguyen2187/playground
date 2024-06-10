@@ -1,5 +1,6 @@
 <script lang="ts">
 import "../app.postcss";
+import autoAnimate from "@formkit/auto-animate";
 import {
 	AppShell,
 	AppBar,
@@ -44,6 +45,7 @@ storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
 const tags = useSelector(globalActor, (state) => state.context.searchTags);
 const tagsArray = derived(tags, (tags) => Array.from(tags.values()));
+const currentState = useSelector(globalActor, (state) => state);
 const appSend = globalActor.send;
 
 async function itemsLoad() {
@@ -51,6 +53,7 @@ async function itemsLoad() {
 		const notes = await notesRead(
 			globalClient,
 			10,
+			$currentState.context.searchKeyword,
 			$tags,
 		);
 		appSend({ type: "Loaded", notes });
@@ -63,6 +66,16 @@ async function itemsLoad() {
 function removeTag(tag: string) {
 	appSend({ type: "SearchTagRemove", tag });
 	itemsLoad();
+}
+
+function setKeyword(keyword: string) {
+	appSend({ type: "SearchKeywordSet", keyword });
+	itemsLoad();
+}
+
+function handleSearchChange(e: Event) {
+	const keyword = (e.target as HTMLInputElement).value;
+	setKeyword(keyword);
 }
 </script>
 
@@ -87,13 +100,14 @@ function removeTag(tag: string) {
         <input
           type="text"
           placeholder="Search..."
+					on:change={handleSearchChange}
         />
 				<div
 					class="flex gap-1"
 				>
 					{#each $tagsArray as tag}
 						<button
-							class="chip variant-filled"
+							class="chip variant-ghost-secondary"
 							on:click={() => removeTag(tag)}
 						>
 							{tag}

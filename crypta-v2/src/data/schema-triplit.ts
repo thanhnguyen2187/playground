@@ -8,9 +8,7 @@ export const schema = {
       title: S.String(),
       text: S.String(),
       encrypted: S.Boolean(),
-      tags: S.RelationMany("noteTags", {
-        where: [["noteId", "=", "$id"]],
-      }),
+      tags: S.Set(S.String()),
       updatedAt: S.Date({ default: S.Default.now() }),
       createdAt: S.Date({ default: S.Default.now() }),
     }),

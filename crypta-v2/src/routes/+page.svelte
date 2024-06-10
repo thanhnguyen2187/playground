@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { globalActor, globalClient } from "$lib/global";
+import { globalActor, globalClient } from "$lib/global";
 import { faAdd, faGear } from "@fortawesome/free-solid-svg-icons";
+import autoAnimate from "@formkit/auto-animate";
 import {
   type ModalSettings,
   ProgressRadial,
   getModalStore,
   getToastStore,
 } from "@skeletonlabs/skeleton";
-  import { useMachine, useSelector } from "@xstate/svelte";
+import { useSelector } from "@xstate/svelte";
 import { Fa } from "svelte-fa";
 import ModalNote from "../components/ModalNote.svelte";
 import ModalEncryption from "../components/ModalEncryption.svelte";
@@ -32,6 +33,7 @@ async function itemsLoad() {
     const notes = await notesRead(
       globalClient,
       10,
+      $currentState.context.searchKeyword,
       $tags,
     );
     appSend({ type: "Loaded", notes });
@@ -145,8 +147,6 @@ async function fnTagAdd(tag: string) {
 itemsLoad();
 </script>
 
-{JSON.stringify($currentStateValue)}
-
 {#if $currentState.matches("Functioning.Idling")}
   <button
     class="btn-icon variant-filled-secondary absolute bottom-6 left-6"
@@ -161,7 +161,10 @@ itemsLoad();
   </button>
 {/if}
 
-<div class="container mt-6 mx-auto flex justify-center items-center">
+<div
+  class="container mt-6 mx-auto flex justify-center items-center"
+  use:autoAnimate
+>
   {#if $currentState.matches("Functioning.Loading")}
     <ProgressRadial value={undefined} />
   {:else if $currentState.matches("Functioning.Idling.Items.Blank")}

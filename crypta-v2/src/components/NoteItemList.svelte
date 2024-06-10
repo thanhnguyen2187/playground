@@ -1,7 +1,7 @@
 <script lang="ts">
 import { formatDate } from "$lib/date";
 import { globalClient } from "$lib/global";
-import { machine } from "$lib/machine-note-item";
+import autoAnimate from '@formkit/auto-animate';
 import {
 	faChain,
 	faClipboard,
@@ -17,6 +17,7 @@ import {
 	InputChip,
 	getModalStore,
 	getToastStore,
+  popup,
 } from "@skeletonlabs/skeleton";
 import { useMachine } from "@xstate/svelte";
 import { Fa } from "svelte-fa";
@@ -129,6 +130,23 @@ $: {
 }
 </script>
 
+<div
+  data-popup="note-tags-more-{note.id}"
+>
+  <div
+    class="flex border gap-2 p-2 bg-surface-500 rounded"
+  >
+    {#each note.tags.slice(2) as tag_}
+      <button
+        class="chip variant-ghost-secondary"
+        on:click={() => fnTagAdd(tag_)}
+      >
+        {tag_}
+      </button>
+    {/each}
+  </div>
+</div>
+
 <div class="bg-surface-500 p-2 border rounded flex justify-between gap-2">
   <div class="w-60 flex items-center">
     <button
@@ -138,7 +156,9 @@ $: {
       {note.title}
     </button>
   </div>
-  <div class="w-40 flex gap-2">
+  <div
+    class="w-40 flex gap-2"
+  >
     {#each note.tags.slice(0, 2) as tag}
       <button
         class="chip variant-ghost-secondary"
@@ -148,10 +168,19 @@ $: {
       </button>
     {/each}
     {#if note.tags.length > 2}
-      <span class="chip variant-ghost-secondary">...</span>
+      <button
+        class="chip variant-ghost-secondary"
+        use:popup={{
+          event: "click",
+          target: "note-tags-more-" + note.id,
+          placement: "right",
+        }}
+      >
+        ...
+      </button>
     {/if}
     {#if note.tags.length === 0}
-      <span class="chip variant-ghost-secondary">no tag yet</span>
+      <button disabled class="chip variant-ghost-secondary">no tag yet</button>
     {/if}
   </div>
   <div class="w-40 flex items-center">
