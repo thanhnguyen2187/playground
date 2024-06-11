@@ -19,7 +19,7 @@ import {
 	offset,
 	arrow,
 } from "@floating-ui/dom";
-import { globalActor, globalClient } from '$lib/global';
+import { globalActorApp, globalClient } from '$lib/global';
 import { useSelector } from '@xstate/svelte';
 import { notesRead } from '../data/queries-triplit';
 import { derived } from 'svelte/store';
@@ -43,10 +43,10 @@ import { derived } from 'svelte/store';
 initializeStores();
 storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
-const tags = useSelector(globalActor, (state) => state.context.searchTags);
+const tags = useSelector(globalActorApp, (state) => state.context.searchTags);
 const tagsArray = derived(tags, (tags) => Array.from(tags.values()));
-const currentState = useSelector(globalActor, (state) => state);
-const appSend = globalActor.send;
+const currentState = useSelector(globalActorApp, (state) => state);
+const appSend = globalActorApp.send;
 
 async function itemsLoad() {
 	try {

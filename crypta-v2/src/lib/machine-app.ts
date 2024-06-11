@@ -61,10 +61,7 @@ export const machine = setup({
             Loaded: {
               target: "Idling",
               actions: assign({
-                notes: ({ event }) => {
-                  console.log("loaded");
-                  return event.notes;
-                },
+                notes: ({ event }) => event.notes,
               }),
             },
             Error: "..DataError",

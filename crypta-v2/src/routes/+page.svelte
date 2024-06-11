@@ -1,5 +1,5 @@
 <script lang="ts">
-import { globalActor, globalClient } from "$lib/global";
+import { globalActorApp, globalClient } from "$lib/global";
 import { faAdd, faGear } from "@fortawesome/free-solid-svg-icons";
 import autoAnimate from "@formkit/auto-animate";
 import {
@@ -23,11 +23,11 @@ import type { NoteDisplay } from "../data/schema-triplit";
 
 const modalStore = getModalStore();
 const toastStore = getToastStore();
-const appSend = globalActor.send;
-const tags = useSelector(globalActor, (state) => state.context.searchTags);
-const notes = useSelector(globalActor, (state) => state.context.notes);
-const currentStateValue = useSelector(globalActor, (state) => state.value);
-const currentState = useSelector(globalActor, (state) => state);
+const appSend = globalActorApp.send;
+const tags = useSelector(globalActorApp, (state) => state.context.searchTags);
+const notes = useSelector(globalActorApp, (state) => state.context.notes);
+const currentStateValue = useSelector(globalActorApp, (state) => state.value);
+const currentState = useSelector(globalActorApp, (state) => state);
 
 async function itemsLoad() {
   try {
@@ -160,6 +160,8 @@ async function fnTagAdd(tag: string) {
 
 itemsLoad();
 </script>
+
+{JSON.stringify($currentStateValue)}
 
 {#if $currentState.matches("Functioning.Idling")}
   <button
