@@ -12,6 +12,7 @@ import { useSelector } from "@xstate/svelte";
 import { Fa } from "svelte-fa";
 import ModalNote from "../components/ModalNote.svelte";
 import ModalEncryption from "../components/ModalEncryption.svelte";
+import ModalSettings_ from "../components/ModalSettings.svelte";
 import NotesList from "../components/NotesList.svelte";
 import {
   createEmptyNoteDisplay,
@@ -139,6 +140,19 @@ function fnModalConfirmDeletion(noteId: string) {
   });
 }
 
+function openModalSettings() {
+  appSend({ type: "ModalOpenSettings" });
+  modalStore.trigger({
+    type: "component",
+    component: {
+      ref: ModalSettings_,
+      props: {},
+    },
+    response: () => appSend({ type: "ModalCancel" }),
+  });
+}
+
+
 async function fnTagAdd(tag: string) {
   appSend({ type: "SearchTagAdd", tag });
   await itemsLoad();
@@ -150,6 +164,7 @@ itemsLoad();
 {#if $currentState.matches("Functioning.Idling")}
   <button
     class="btn-icon variant-filled-secondary absolute bottom-6 left-6"
+    on:click={openModalSettings}
   >
     <Fa icon={faGear} size="lg"/>
   </button>

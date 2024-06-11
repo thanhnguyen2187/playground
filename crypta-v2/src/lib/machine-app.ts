@@ -33,6 +33,7 @@ export const machine = setup({
       | { type: "SearchKeywordSet"; keyword: string }
       | { type: "ModalOpenNote"; note: NoteDisplay }
       | { type: "ModalOpenEncryption"; note: NoteDisplay }
+      | { type: "ModalOpenSettings" }
       | { type: "ModalConfirmDeletion" }
       | { type: "ModalCancel" },
   },
@@ -80,6 +81,9 @@ export const machine = setup({
             },
             ModalOpenEncryption: {
               target: ".Modal.Encryption",
+            },
+            ModalOpenSettings: {
+              target: ".Modal.Settings",
             },
             ModalConfirmDeletion: {
               target: ".Modal.Deletion",
