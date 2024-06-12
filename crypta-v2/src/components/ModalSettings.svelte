@@ -21,6 +21,7 @@ onDestroy(() => {
     "cryptaa.globalClientOptions",
     JSON.stringify(globalClientOptions),
   );
+
 });
 
 const snapshot = useSelector(globalActorSettings, (state) => state);
@@ -82,6 +83,11 @@ function updateGlobalClientOptions() {
     send({ type: "Failed" });
   }
 }
+
+const miscText = `
+- Powered by: Skeleton, Svelte, SvelteKit, XState, and Triplit
+- Bug report/feature request: https://github.com/thanhnguyen2187/cryptaa/issues
+`.trim();
 </script>
 
 <div class="card p-4 pt-2 w-modal-slim">
@@ -145,7 +151,9 @@ function updateGlobalClientOptions() {
             {/if}
           </div>
         {:else if $tabActivated === "miscellanies"}
-          Hello world
+          <div class="grow">
+            <pre class="whitespace-pre-wrap">{miscText}</pre>
+          </div>
         {/if}
       </div>
     </svelte:fragment>
