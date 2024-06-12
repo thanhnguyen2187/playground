@@ -92,7 +92,7 @@ function handleSearchChange(e: Event) {
 		<!-- App Bar -->
 		<AppBar slotDefault="place-self-center">
 			<svelte:fragment slot="lead">
-				<strong class="hidden md:block text-xl uppercase">Crypta</strong>
+				<strong class="hidden md:block text-xl uppercase">Cryptaa</strong>
 			</svelte:fragment>
 			<div
 				class="input-group input-group-divider"
