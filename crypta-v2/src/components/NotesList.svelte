@@ -48,6 +48,7 @@ function increaseLimit() {
 }
 
 function reload() {
+  appSend({type: "LimitSet", limit: 10});
   itemsLoad();
 }
 

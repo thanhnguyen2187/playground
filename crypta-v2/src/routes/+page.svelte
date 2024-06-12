@@ -186,7 +186,7 @@ itemsLoad();
 {/if}
 
 <div
-  class="container mt-6 mx-auto flex justify-center items-center"
+  class="container mt-4 mx-auto flex justify-center items-center"
 >
   {#if $currentState.matches("Functioning.Loading")}
     <ProgressRadial value={undefined} />

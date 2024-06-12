@@ -148,7 +148,7 @@ $: {
 </div>
 
 <div class="bg-surface-500 p-2 border rounded flex justify-between gap-2">
-  <div class="w-60 flex items-center">
+  <div class="w-40 md:w-60 flex items-center">
     <button
       class="truncate"
       on:click={() => fnUpdate(note)}
@@ -157,7 +157,7 @@ $: {
     </button>
   </div>
   <div
-    class="w-40 flex gap-2"
+    class="w-40 hidden md:flex gap-2"
   >
     {#each note.tags.slice(0, 2) as tag}
       <button
@@ -183,7 +183,7 @@ $: {
       <button disabled class="chip variant-ghost-secondary">no tag yet</button>
     {/if}
   </div>
-  <div class="w-40 flex items-center">
+  <div class="w-40 hidden md:flex items-center">
     {formatDate(note.updatedAt)}
   </div>
   <!--TODO: improve the width of this to remove the redundant end gap-->
