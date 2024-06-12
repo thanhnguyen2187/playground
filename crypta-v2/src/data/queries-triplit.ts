@@ -26,7 +26,9 @@ export async function notesRead(
   for (const tag of tags) {
     query = query.where("tags", "has", tag);
   }
-  const result = await client.fetch(query.build());
+  const result = await client.fetch(query.build(), {
+    policy: "local-and-remote",
+  });
   const notes = Array.from(result.values());
   const noteDisplays = notes.map((note) => ({
     ...note,
@@ -36,6 +38,32 @@ export async function notesRead(
       .sort(),
   }));
   return noteDisplays;
+}
+
+export async function noteCount(
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  client: TriplitClient<any>,
+  keyword: string,
+  tags: Set<string>,
+) {
+  let query = client.query("notes");
+  if (keyword !== "") {
+    query = query.where(
+      or([
+        ["title", "like", `%${keyword}%`],
+        ["text", "like", `%${keyword}%`],
+      ]),
+    );
+  }
+  for (const tag of tags) {
+    query = query.where("tags", "has", tag);
+  }
+  const result = await client.fetch(query.build(), {
+    policy: "local-and-remote",
+  });
+  const notes = Array.from(result.values());
+  const count = notes.length;
+  return count;
 }
 
 export async function notesUpsert(

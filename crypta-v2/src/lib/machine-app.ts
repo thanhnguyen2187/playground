@@ -7,6 +7,8 @@ export const machine = setup({
     context: {} as {
       notes: NoteDisplay[];
       note: NoteDisplay;
+      limit: number;
+      notesTotalCount: number;
       searchTags: Set<string>;
       searchKeyword: string;
     },
@@ -26,11 +28,12 @@ export const machine = setup({
       | { type: "Clear" }
       | { type: "Retried" }
       | { type: "Error" }
-      | { type: "Loaded"; notes: NoteDisplay[] }
+      | { type: "Loaded"; notes: NoteDisplay[]; totalCount: number }
       | { type: "Reload" }
       | { type: "SearchTagAdd"; tag: string }
       | { type: "SearchTagRemove"; tag: string }
       | { type: "SearchKeywordSet"; keyword: string }
+      | { type: "LimitSet"; limit: number }
       | { type: "ModalOpenNote"; note: NoteDisplay }
       | { type: "ModalOpenEncryption"; note: NoteDisplay }
       | { type: "ModalOpenSettings" }
@@ -44,6 +47,8 @@ export const machine = setup({
   context: {
     notes: [],
     note: createEmptyNoteDisplay(),
+    notesTotalCount: 0,
+    limit: 10,
     searchTags: new Set(),
     searchKeyword: "",
   },
@@ -62,6 +67,7 @@ export const machine = setup({
               target: "Idling",
               actions: assign({
                 notes: ({ event }) => event.notes,
+                notesTotalCount: ({ event }) => event.totalCount,
               }),
             },
             Error: "..DataError",
@@ -112,6 +118,12 @@ export const machine = setup({
                 searchKeyword: ({ event }) => event.keyword,
               }),
             },
+            LimitSet: {
+              target: "Loading",
+              actions: assign({
+                limit: ({ event }) => event.limit,
+              }),
+            }
           },
           states: {
             Items: {

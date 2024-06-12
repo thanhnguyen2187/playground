@@ -21,7 +21,7 @@ import {
 } from "@floating-ui/dom";
 import { globalActorApp, globalClient } from '$lib/global';
 import { useSelector } from '@xstate/svelte';
-import { notesRead } from '../data/queries-triplit';
+import { noteCount, notesRead } from '../data/queries-triplit';
 import { derived } from 'svelte/store';
 
 // Highlight JS
@@ -52,11 +52,16 @@ async function itemsLoad() {
 	try {
 		const notes = await notesRead(
 			globalClient,
-			10,
+			$currentState.context.limit,
 			$currentState.context.searchKeyword,
 			$tags,
 		);
-		appSend({ type: "Loaded", notes });
+		const count = await noteCount(
+			globalClient,
+			$currentState.context.searchKeyword,
+			$tags,
+		);
+		appSend({ type: "Loaded", notes, totalCount: count });
 	} catch (e) {
 		appSend({ type: "FailedData" });
 		console.error(e);

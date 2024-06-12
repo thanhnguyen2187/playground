@@ -18,7 +18,12 @@ import {
   createEmptyNoteDisplay,
   encryptNote,
 } from "../data/data-transformation";
-import { notesDelete, notesRead, notesUpsert } from "../data/queries-triplit";
+import {
+  noteCount,
+  notesDelete,
+  notesRead,
+  notesUpsert,
+} from "../data/queries-triplit";
 import type { NoteDisplay } from "../data/schema-triplit";
 
 const modalStore = getModalStore();
@@ -33,11 +38,16 @@ async function itemsLoad() {
   try {
     const notes = await notesRead(
       globalClient,
-      10,
+      $currentState.context.limit,
       $currentState.context.searchKeyword,
       $tags,
     );
-    appSend({ type: "Loaded", notes });
+    const count = await noteCount(
+      globalClient,
+      $currentState.context.searchKeyword,
+      $tags,
+    );
+    appSend({ type: "Loaded", notes, totalCount: count });
   } catch (e) {
     appSend({ type: "FailedData" });
     console.error(e);
@@ -152,7 +162,6 @@ function openModalSettings() {
   });
 }
 
-
 async function fnTagAdd(tag: string) {
   appSend({ type: "SearchTagAdd", tag });
   await itemsLoad();
@@ -160,8 +169,6 @@ async function fnTagAdd(tag: string) {
 
 itemsLoad();
 </script>
-
-{JSON.stringify($currentStateValue)}
 
 {#if $currentState.matches("Functioning.Idling")}
   <button
@@ -180,7 +187,6 @@ itemsLoad();
 
 <div
   class="container mt-6 mx-auto flex justify-center items-center"
-  use:autoAnimate
 >
   {#if $currentState.matches("Functioning.Loading")}
     <ProgressRadial value={undefined} />
