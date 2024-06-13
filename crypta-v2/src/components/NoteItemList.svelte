@@ -1,11 +1,7 @@
 <script lang="ts">
 import { formatDate } from "$lib/date";
 import { globalClient } from "$lib/global";
-import autoAnimate from '@formkit/auto-animate';
 import {
-	faChain,
-	faClipboard,
-	faClone,
 	faCopy,
 	faEdit,
 	faKey,
@@ -25,6 +21,7 @@ import { aesGcmDecrypt } from "../data/encryption";
 import type { NoteDisplay } from "../data/schema-triplit";
 import ModalEncryption from "./ModalEncryption.svelte";
 import { notesUpsert } from '../data/queries-triplit';
+import { copyToClipboard } from '$lib/clipboard';
 
 const modalStore = getModalStore();
 const toastStore = getToastStore();
@@ -123,6 +120,25 @@ async function clear() {
   }
 }
 
+async function copy() {
+  const result = await copyToClipboard(note.text)
+  if (result === 'success') {
+    toastStore.trigger({
+      message: "Copied content to clipboard!",
+      background: "bg-success-800",
+      hideDismiss: true,
+      timeout: 2000,
+    });
+  } else {
+    toastStore.trigger({
+      message: "Could not copy to clipboard!",
+      background: "bg-error-700",
+      hideDismiss: true,
+      timeout: 2000,
+    });
+  }
+}
+
 $: {
 	if (note.encrypted && state === "idling") {
 		state = "encrypted";
@@ -192,7 +208,7 @@ $: {
       <button on:click={() => fnUpdate(note)}>
         <Fa icon={faEdit}></Fa>
       </button>
-      <button>
+      <button on:click={copy}>
         <Fa icon={faCopy}></Fa>
       </button>
       <button on:click={() => fnEncrypt(note)}>
@@ -212,8 +228,8 @@ $: {
       <button>
         <Fa icon={faEdit}></Fa>
       </button>
-      <button>
-      <Fa icon={faCopy}></Fa>
+      <button on:click={copy}>
+        <Fa icon={faCopy}></Fa>
       </button>
       <button on:click={clear}>
         <Fa icon={faKey}></Fa>
