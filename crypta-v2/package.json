@@ -8,7 +8,6 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "server": "triplit dev --initWithSchema --schemaPath src/data/schema-triplit.ts --dbPort ${PORT:-4567} --storage memory",
     "test": "vitest"
   },
   "devDependencies": {
@@ -22,19 +21,15 @@
     "@tailwindcss/forms": "0.5.7",
     "@tailwindcss/typography": "0.5.13",
     "@triplit/cli": "^0.3.66",
-    "@triplit/server": "^0.3.46",
     "@types/node": "20.12.13",
     "autoprefixer": "10.4.19",
-    "drizzle-kit": "^0.22.1",
     "globals": "^15.0.0",
     "postcss": "8.4.38",
     "svelte": "^4.2.7",
     "svelte-check": "^3.6.0",
     "tailwindcss": "3.4.3",
     "tslib": "^2.4.1",
-    "tsx": "^4.15.2",
     "typescript": "^5.0.0",
-    "typescript-eslint": "^8.0.0-alpha.20",
     "vite": "^5.0.3",
     "vite-plugin-tailwind-purgecss": "0.3.3",
     "vitest": "^1.2.0"

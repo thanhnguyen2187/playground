@@ -1,6 +1,4 @@
 import { assign, setup } from "xstate";
-import type { NoteDisplay } from "../data/schema-triplit";
-import { createEmptyNoteDisplay } from "../data/data-transformation";
 
 export const machine = setup({
   types: {

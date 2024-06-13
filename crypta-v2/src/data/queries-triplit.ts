@@ -1,11 +1,6 @@
 import type { TriplitClient } from "@triplit/client";
 import { or } from "@triplit/db";
-import type {
-  Note,
-  NoteDisplay,
-  NoteTag,
-  NoteWithoutID,
-} from "./schema-triplit";
+import type { NoteDisplay } from "./schema-triplit";
 
 export async function notesRead(
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>

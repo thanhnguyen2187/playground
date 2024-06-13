@@ -13,15 +13,6 @@ export const schema = {
       createdAt: S.Date({ default: S.Default.now() }),
     }),
   },
-  noteTags: {
-    schema: S.Schema({
-      id: S.Id(),
-      noteId: S.String(),
-      tagText: S.String(),
-      updatedAt: S.Date({ default: S.Default.now() }),
-      createdAt: S.Date({ default: S.Default.now() }),
-    }),
-  },
 } satisfies ClientSchema;
 
 export type Note = Entity<typeof schema, "notes">;
@@ -35,5 +26,3 @@ export type NoteDisplay = {
   updatedAt: Date;
 };
 export type NoteWithoutID = Exclude<Note, "id">;
-export type NoteTag = Entity<typeof schema, "noteTags">;
-export type NoteTagWithoutID = Exclude<NoteTag, "id">;
