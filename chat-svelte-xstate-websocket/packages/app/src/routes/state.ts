@@ -14,15 +14,16 @@ export namespace Context {
 }
 
 export namespace Event {
-  export type Increment = {
-    type: "Increment";
+  export type MessageSend = {
+    type: "MessageSend";
+    value: string;
   };
 
   export type Decrement = {
     type: "Decrement";
   };
 
-  export type All = Increment | Decrement;
+  export type All = MessageSend | Decrement;
 }
 
 export namespace Actor {
@@ -51,5 +52,12 @@ export const machine = setup({
     Idling: {},
   },
   on: {
+    MessageSend: {
+      actions: assign({
+        messages: ({ context, event }) => {
+          return [...context.messages, event.value];
+        },
+      }),
+    },
   },
 });

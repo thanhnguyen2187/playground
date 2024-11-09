@@ -3,7 +3,18 @@ import { machine } from "./state";
 import { createActor } from "xstate";
 import { wrap } from "$lib/xstate-wrapper.svelte";
 
+let inputText: HTMLInputElement;
+
 const actor = wrap(createActor(machine));
+
+function handleSend() {
+  const value = inputText.value;
+  actor.ref.send({
+    type: "MessageSend",
+    value,
+  });
+  inputText.value = "";
+}
 </script>
 
 <div class="h-screen bg-base-200 p-4">
@@ -19,8 +30,18 @@ const actor = wrap(createActor(machine));
 
     <!-- Input Area -->
     <div class="flex gap-2">
-      <input type="text" placeholder="Type a message..." class="input input-bordered flex-1" />
-      <button class="btn btn-primary">Send</button>
+      <input
+        type="text"
+        placeholder="Type a message..."
+        class="input input-bordered flex-1"
+        bind:this={inputText}
+      />
+      <button
+        class="btn btn-primary"
+        onclick={handleSend}
+      >
+        Send
+      </button>
     </div>
   </div>
 </div>
