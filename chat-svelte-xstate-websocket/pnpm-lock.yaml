@@ -65,6 +65,10 @@ importers:
         version: 2.1.4(@types/node@22.9.0)
 
   packages/server:
+    dependencies:
+      uWebSockets.js:
+        specifier: github:uNetworking/uWebSockets.js#v20.48.0
+        version: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/51ae1d1fd92dff77cbbdc7c431021f85578da1a6
     devDependencies:
       '@types/node':
         specifier: ^22.9.0
@@ -1277,6 +1281,10 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  uWebSockets.js@https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/51ae1d1fd92dff77cbbdc7c431021f85578da1a6:
+    resolution: {tarball: https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/51ae1d1fd92dff77cbbdc7c431021f85578da1a6}
+    version: 20.48.0
+
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
 
@@ -2426,6 +2434,8 @@ snapshots:
       fsevents: 2.3.3
 
   typescript@5.6.3: {}
+
+  uWebSockets.js@https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/51ae1d1fd92dff77cbbdc7c431021f85578da1a6: {}
 
   undici-types@6.19.8: {}
 
