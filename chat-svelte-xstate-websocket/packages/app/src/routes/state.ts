@@ -19,11 +19,12 @@ export namespace Event {
     value: string;
   };
 
-  export type Decrement = {
-    type: "Decrement";
+  export type MessageReceived = {
+    type: "MessageReceived";
+    value: string;
   };
 
-  export type All = MessageSend | Decrement;
+  export type All = MessageSend | MessageReceived;
 }
 
 export namespace Actor {
