@@ -60,5 +60,12 @@ export const machine = setup({
         },
       }),
     },
+    MessageReceived: {
+      actions: assign({
+        messages: ({ context, event }) => {
+          return [...context.messages, event.value];
+        },
+      }),
+    },
   },
 });

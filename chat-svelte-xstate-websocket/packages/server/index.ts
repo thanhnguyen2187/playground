@@ -10,17 +10,24 @@ uWS
     open: (ws) => {
       // Add the client to our set
       clients.add(ws);
-      ws.send("Connected to chat server!");
+      ws.send(
+        JSON.stringify({
+          type: "OPEN",
+        }),
+      );
     },
 
     // When a message is received
     message: (ws, message, isBinary) => {
       // Broadcast to all clients except sender
       for (const client of clients) {
-        // Make sure client isn't the sender and is still connected
-        if (client !== ws && client.getBufferedAmount() < 16384) {
-          client.send(message, isBinary);
-        }
+        client.send(
+          JSON.stringify({
+            type: "MESSAGE",
+            value: Buffer.from(message).toString("utf8").trim(),
+          }),
+          isBinary,
+        );
       }
     },
 

@@ -6,13 +6,30 @@ import { wrap } from "$lib/xstate-wrapper.svelte";
 let inputText: HTMLInputElement;
 
 const actor = wrap(createActor(machine));
+const ws = new WebSocket("ws://localhost:8080");
+
+type Message =
+  | {
+      type: string;
+    }
+  | {
+      type: "MESSAGE";
+      value: string;
+    };
+
+ws.onmessage = (event) => {
+  const message: Message = JSON.parse(event.data);
+  if (message.type === "MESSAGE" && "value" in message) {
+    actor.ref.send({
+      type: "MessageReceived",
+      value: message.value,
+    });
+  }
+};
 
 function handleSend() {
   const value = inputText.value;
-  actor.ref.send({
-    type: "MessageSend",
-    value,
-  });
+  ws.send(value);
   inputText.value = "";
 }
 </script>
