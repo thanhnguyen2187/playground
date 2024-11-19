@@ -1,0 +1,21 @@
+{
+  "name": "barebone-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run-1-1": "tsx watch question-1-1.ts",
+    "run-1-2": "tsx watch question-1-2.ts",
+    "run-3-1": "tsx watch question-3-1.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
