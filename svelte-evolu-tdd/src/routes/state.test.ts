@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import { createActor } from "xstate";
-import { machine, State, Context } from "./state";
+import { machine, State, type Context } from "./state";
 
 describe("Todo Machine", () => {
   let actor: ReturnType<typeof createActor>;

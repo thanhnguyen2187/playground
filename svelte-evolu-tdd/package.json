@@ -29,12 +29,16 @@
     "vitest": "^2.0.4"
   },
   "dependencies": {
+    "@effect/schema": "^0.75.5",
     "@evolu/common": "^5.4.8",
     "@evolu/common-web": "^8.2.4",
+    "@powersync/web": "^1.11.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.9",
     "@tailwindcss/typography": "^0.5.15",
+    "@triplit/client": "^0.6.1",
+    "tinybase": "^5.3.9",
     "xstate": "^5.19.0"
   }
 }

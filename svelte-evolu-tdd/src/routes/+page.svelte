@@ -2,6 +2,7 @@
 import { machine } from "./state";
 import { wrap } from "$lib/xstate-wrapper.svelte";
 import { createActor } from "xstate";
+import { evolu } from "../data/evolu";
 
 let inputTask: HTMLInputElement;
 
@@ -18,6 +19,7 @@ function handleAddTask() {
     name: inputTask.value,
   });
   inputTask.value = "";
+  setTimeout(() => inputTask.focus(), 0);
 }
 
 function handleInputKeydown(event: KeyboardEvent) {
