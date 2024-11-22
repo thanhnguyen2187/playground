@@ -6,8 +6,10 @@ test("Create todo", async () => {
   const db = new PowerSyncDatabase({
     schema: AppSchema,
     database: {
-      dbFilename: ":memory:",
+      dbFilename: "todos.db",
+      dbLocation: "memory",
     },
+    flags: {},
   });
   const todo = {
     name: "Buy milk",

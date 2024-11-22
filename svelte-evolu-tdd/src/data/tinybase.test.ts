@@ -7,7 +7,7 @@ test("Create store", async () => {
   expect(store.getTables()).toEqual({});
 });
 
-test("Create todo", async () => {
+test("CRUD todo", async () => {
   const store = createStore();
   store.setTablesSchema({
     todos: {
@@ -18,13 +18,12 @@ test("Create todo", async () => {
 
   const id = randomUUID();
   store.setRow("todos", id, { name: "test" });
+  const row = store.getRow("todos", id);
 
-  expect(store.getTables()).toEqual({
-    todos: {
-      [id]: {
-        name: "test",
-        done: false,
-      },
-    },
+  expect(row).toEqual({
+    name: "test",
+    done: false,
   });
+
+  store.getRowCount("todos")
 });
