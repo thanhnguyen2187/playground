@@ -22,8 +22,11 @@ fn print_version() {
 }
 
 fn run(file_path: &str) {
-    let contents = fs::read_to_string(file_path).expect("file not found");
-    println!("{}", contents);
+    let contents_result = fs::read_to_string(file_path);
+    match contents_result {
+        Ok(contents) => println!("{}", contents),
+        Err(error) => println!("File not found or could not be read: {}", error),
+    }
 }
 
 fn main() {
