@@ -1,49 +1,38 @@
-use clap::{App, AppSettings, Arg, SubCommand};
+use clap::{Parser, Subcommand};
 use std::process::exit;
 
-fn main() {
-    let matches = App::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .setting(AppSettings::DisableHelpSubcommand)
-        .setting(AppSettings::SubcommandRequiredElseHelp)
-        .setting(AppSettings::VersionlessSubcommands)
-        .subcommand(
-            SubCommand::with_name("set")
-                .about("Set the value of a string key to a string")
-                .arg(Arg::with_name("KEY").help("A string key").required(true))
-                .arg(
-                    Arg::with_name("VALUE")
-                        .help("The string value of the key")
-                        .required(true),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("get")
-                .about("Get the string value of a given string key")
-                .arg(Arg::with_name("KEY").help("A string key").required(true)),
-        )
-        .subcommand(
-            SubCommand::with_name("rm")
-                .about("Remove a given key")
-                .arg(Arg::with_name("KEY").help("A string key").required(true)),
-        )
-        .get_matches();
+#[derive(Parser, Debug)]
+#[command(version)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
 
-    match matches.subcommand() {
-        ("set", Some(_matches)) => {
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Set the value of a string key to a string
+    Set { key: String, value: String },
+    /// Get the string value of a given string key
+    Get { key: String },
+    /// Remove a given key
+    Rm { key: String },
+}
+
+fn main() {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Set { key, value } => {
             eprintln!("unimplemented");
             exit(1);
         }
-        ("get", Some(_matches)) => {
+        Commands::Get { key } => {
             eprintln!("unimplemented");
             exit(1);
         }
-        ("rm", Some(_matches)) => {
+        Commands::Rm { key } => {
             eprintln!("unimplemented");
             exit(1);
         }
-        _ => unreachable!(),
     }
 }
