@@ -1,4 +1,5 @@
-use clap::Parser;
+use std::ops::AddAssign;
+use clap::{Parser, Args};
 
 #[derive(Parser)]
 #[command(version)]
@@ -10,17 +11,28 @@ struct Cli {
 
 #[derive(Parser)]
 enum Commands {
-    Get,
-    Set,
-    Rm,
+    Get(ArgsKey),
+    Set(ArgsKeyValue),
+    Rm(ArgsKey),
+}
+
+#[derive(Args)]
+struct ArgsKey {
+    key: String,
+}
+
+#[derive(Args)]
+struct ArgsKeyValue {
+    key: String,
+    value: String,
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Get => println!("get"),
-        Commands::Set => println!("set"),
-        Commands::Rm => println!("rm"),
+        Commands::Get(_) => panic!("unimplemented"),
+        Commands::Set(_) => panic!("unimplemented"),
+        Commands::Rm(_) => panic!("unimplemented"),
     }
 }
