@@ -57,13 +57,14 @@ fn main() -> kvs::Result<()> {
             store.set(key, value)?;
         }
         Commands::Rm { key } => {
-            let result = store.remove(key.clone())?;
+            let result = store.remove(key.clone());
             match result {
-                Some(_) => (),
-                None => {
+                Ok(Some(value)) => (),
+                Ok(None) => {
                     println!("Key not found");
                     exit(1);
-                }
+                },
+                Err(err) => println!("Error: {}", err),
             }
         }
     }

@@ -60,6 +60,24 @@ pub fn deserialize_commands(text: &String) -> Result<Vec<Command>> {
     Ok(commands)
 }
 
+pub fn _append_log(line: String, path: &PathBuf) -> Result<()> {
+    let mut file = OpenOptions::new()
+        .append(true)
+        .open(path.clone())
+        .map_err(
+            |err| Error::FileOpen {
+                path: path.to_string_lossy().to_string(),
+                err_str: err.to_string(),
+            }
+        )?;
+
+    writeln!(file, "{}", line).map_err(
+        |err| Error::CommandWriteLine { err_str: err.to_string() }
+    )?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,22 +192,9 @@ impl KvStore {
         }
     }
 
-    pub fn append_log(&mut self, line: String) -> Result<()> {
-        let log_path = self.log_path.as_ref().unwrap();
-        let log_path_str = log_path.to_string_lossy().to_string();
-        let mut file = OpenOptions::new()
-            .append(true)
-            .open(log_path)
-            .map_err(|err| Error::FileOpen {
-                path: log_path_str,
-                err_str: err.to_string(),
-            })?;
-
-        writeln!(file, "{}", line).map_err(
-            |err| Error::CommandWriteLine { err_str: err.to_string() }
-        )?;
-
-        Ok(())
+    pub fn append_log(&self, line: String) -> Result<()> {
+        let log_path = self.log_path.as_ref().expect("log path not initialized");
+        _append_log(line, log_path)
     }
 
     pub fn set_persistent(&mut self, key: String, value: String) -> Result<()> {
@@ -251,7 +256,7 @@ impl KvStore {
                 self.remove_persistent(key.clone())?;
                 Ok(Some(value))
             }
-            None => Err(Error::KeyNotFound { key }),
+            None => Ok(None),
         }
     }
 
