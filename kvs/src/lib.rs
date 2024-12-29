@@ -2,7 +2,7 @@ mod err;
 
 pub use err::{Result, Error};
 use std::collections::HashMap;
-use std::fs::{read_to_string, File, OpenOptions};
+use std::fs::{read_to_string, OpenOptions};
 use std::path::{Path, PathBuf};
 use std::io::Write;
 use serde::{Serialize, Deserialize};
@@ -41,7 +41,7 @@ pub fn serialize_commands(commands: &[Command]) -> Result<String> {
 }
 
 pub fn deserialize_commands(text: &String) -> Result<Vec<Command>> {
-    let lines = text.trim().lines().collect::<Vec<&str>>();
+    let lines = text.trim().lines();
     let mut commands = Vec::new();
 
     for line in lines {
@@ -174,9 +174,25 @@ impl KvStore {
         }
     }
 
-    pub fn set(&mut self, key: String, value: String) -> Result<()> {
-        self.underlying.insert(key.clone(), value.clone());
+    pub fn append_log(&mut self, line: String) -> Result<()> {
+        let log_path = self.log_path.as_ref().unwrap();
+        let log_path_str = log_path.to_string_lossy().to_string();
+        let mut file = OpenOptions::new()
+            .append(true)
+            .open(log_path)
+            .map_err(|err| Error::FileOpen {
+                path: log_path_str,
+                err_str: err.to_string(),
+            })?;
 
+        writeln!(file, "{}", line).map_err(
+            |err| Error::CommandWriteLine { err_str: err.to_string() }
+        )?;
+
+        Ok(())
+    }
+
+    pub fn set_persistent(&mut self, key: String, value: String) -> Result<()> {
         let log_line = serde_json::to_string(
             &Command::Set {
                 key: key.clone(),
@@ -188,20 +204,18 @@ impl KvStore {
                 err_str: err.to_string(),
             }
         )?;
-        let log_path = self.log_path.as_ref().unwrap();
-        let log_path_str = log_path.to_string_lossy().to_string();
-        let mut file = OpenOptions::new()
-            .append(true)
-            .open(log_path)
-            .map_err(|err| Error::FileOpen {
-                path: log_path_str,
-                err_str: err.to_string(),
-            })?;
 
-        writeln!(file, "{}", log_line).map_err(
-            |err| Error::CommandWriteLine { err_str: err.to_string() }
-        )?;
+        self.append_log(log_line)
+    }
 
+    pub fn set_underlying(&mut self, key: String, value: String) -> Result<()> {
+        self.underlying.insert(key, value);
+        Ok(())
+    }
+
+    pub fn set(&mut self, key: String, value: String) -> Result<()> {
+        self.set_underlying(key.clone(), value.clone())?;
+        self.set_persistent(key, value)?;
         Ok(())
     }
 
@@ -214,10 +228,31 @@ impl KvStore {
         )
     }
 
-    pub fn remove(&mut self, key: String) -> Result<()> {
-        self.underlying.remove(&key);
+    pub fn remove_persistent(&mut self, key: String) -> Result<()> {
+        let command = Command::Rm { key: key.clone() };
+        let log_line = serde_json::to_string(&command)
+            .map_err(
+                |err| Error::CommandSerialize {
+                    command: format!("{:?}", command),
+                    err_str: err.to_string(),
+                }
+            )?;
 
-        Ok(())
+        self.append_log(log_line)
+    }
+
+    pub fn remove_underlying(&mut self, key: String) -> Option<String> {
+        self.underlying.remove(&key)
+    }
+
+    pub fn remove(&mut self, key: String) -> Result<Option<String>> {
+        match self.remove_underlying(key.clone()) {
+            Some(value) => {
+                self.remove_persistent(key.clone())?;
+                Ok(Some(value))
+            }
+            None => Err(Error::KeyNotFound { key }),
+        }
     }
 
     pub fn open(path: &Path) -> Result<Self> {
@@ -231,11 +266,11 @@ impl KvStore {
             .write(true)
             .open(log_path.clone())
             .map_err(
-            |err| Error::FileInit {
-                path: log_path.to_string_lossy().to_string(),
-                err_str: err.to_string(),
-            }
-        )?;
+                |err| Error::FileInit {
+                    path: log_path.to_string_lossy().to_string(),
+                    err_str: err.to_string(),
+                }
+            )?;
 
         let log_raw = read_to_string(log_path.clone()).map_err(
             |err| Error::FileRead {
@@ -247,8 +282,8 @@ impl KvStore {
 
         for command in commands {
             match command {
-                Command::Set { key, value } => store.set(key, value)?,
-                Command::Rm { key } => store.remove(key)?,
+                Command::Set { key, value } => { store.set_underlying(key, value)? }
+                Command::Rm { key } => { store.remove_underlying(key); }
                 _ => unreachable!("invalid command {:?}", command),
             }
         }

@@ -1,4 +1,6 @@
+use std::env::current_dir;
 use std::path::Path;
+use std::process::exit;
 use clap::{Parser};
 
 #[derive(Parser)]
@@ -32,7 +34,14 @@ enum Commands {
 
 fn main() -> kvs::Result<()> {
     let cli = Cli::parse();
-    let mut store = kvs::KvStore::open(Path::new(env!("PWD")))?;
+    let mut store = kvs::KvStore::open(
+        Path::new(
+            current_dir()
+                .expect("unable to get current directory")
+                .to_str()
+                .unwrap()
+        )
+    )?;
 
     match cli.command {
         Commands::Get { key } => {
@@ -45,10 +54,18 @@ fn main() -> kvs::Result<()> {
             }
         }
         Commands::Set { key, value } => {
-            store.set(key.clone(), value.clone())?;
-            // println!("Set key {} to value {}", key, value);
+            store.set(key, value)?;
         }
-        Commands::Rm { key: _ } => panic!("unimplemented"),
+        Commands::Rm { key } => {
+            let result = store.remove(key.clone())?;
+            match result {
+                Some(_) => (),
+                None => {
+                    println!("Key not found");
+                    exit(1);
+                }
+            }
+        }
     }
 
     Ok(())
