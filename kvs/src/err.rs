@@ -25,6 +25,9 @@ pub enum Error {
 
     #[snafu(display("Couldn't read content of file at {path}"))]
     FileRead { path: String, err_str: String },
+
+    #[snafu(display("Couldn't write to file at {path}"))]
+    FileWrite { path: String, err_str: String },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
