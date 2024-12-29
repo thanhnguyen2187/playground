@@ -1,5 +1,5 @@
-use std::ops::AddAssign;
-use clap::{Parser, Args};
+use std::path::Path;
+use clap::{Parser};
 
 #[derive(Parser)]
 #[command(version)]
@@ -11,28 +11,45 @@ struct Cli {
 
 #[derive(Parser)]
 enum Commands {
-    Get(ArgsKey),
-    Set(ArgsKeyValue),
-    Rm(ArgsKey),
+    /// Get a value from the store
+    Get {
+        /// The key to be retrieved
+        key: String
+    },
+    /// Set a value in the store
+    Set {
+        /// The key to be set
+        key: String,
+        /// The value to set
+        value: String,
+    },
+    /// Remove a value from the store
+    Rm {
+        /// The key to be removed
+        key: String
+    },
 }
 
-#[derive(Args)]
-struct ArgsKey {
-    key: String,
-}
-
-#[derive(Args)]
-struct ArgsKeyValue {
-    key: String,
-    value: String,
-}
-
-fn main() {
+fn main() -> kvs::Result<()> {
     let cli = Cli::parse();
+    let mut store = kvs::KvStore::open(Path::new(env!("PWD")))?;
 
     match cli.command {
-        Commands::Get(_) => panic!("unimplemented"),
-        Commands::Set(_) => panic!("unimplemented"),
-        Commands::Rm(_) => panic!("unimplemented"),
+        Commands::Get { key } => {
+            let result =
+                store.get(key.clone());
+            match result {
+                Ok(Some(value)) => println!("{}", value),
+                Ok(None) => println!("Key not found"),
+                Err(err) => println!("Error: {}", err),
+            }
+        }
+        Commands::Set { key, value } => {
+            store.set(key.clone(), value.clone())?;
+            // println!("Set key {} to value {}", key, value);
+        }
+        Commands::Rm { key: _ } => panic!("unimplemented"),
     }
+
+    Ok(())
 }
