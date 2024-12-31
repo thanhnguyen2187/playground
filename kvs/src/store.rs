@@ -4,6 +4,7 @@ use crate::{Command, Error};
 use serde::{Deserialize, Serialize};
 use snafu::whatever;
 use std::collections::HashMap;
+use std::fs;
 use std::fs::{read_to_string, File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -95,9 +96,21 @@ pub fn append_command(command: Command, file_path: &PathBuf) -> Result<()> {
         .with_whatever_context(|_| format!("Couldn't write command as new line: {}", line))
 }
 
+pub fn convert_map_to_commands(store_underlying: &HashMap<String, String>) -> Vec<Command> {
+    let mut commands = Vec::new();
+    for (key, value) in store_underlying {
+        commands.push(Command::Set {
+            key: key.clone(),
+            value: value.clone(),
+        });
+    }
+    commands
+}
+
 pub struct KvStoreV2 {
     file_path: Option<PathBuf>,
     map: HashMap<String, String>,
+    log_count: usize,
 }
 
 impl KvStoreV2 {
@@ -105,6 +118,7 @@ impl KvStoreV2 {
         Self {
             file_path: None,
             map: HashMap::new(),
+            log_count: 0,
         }
     }
 
@@ -119,11 +133,23 @@ impl KvStoreV2 {
             deserialize_commands(&read_to_string(&file_path).with_whatever_context(|_| {
                 format!("Couldn't read content of file at {}", file_path.display())
             })?)?;
+        store.log_count = commands.len();
         for command in commands {
             apply_command(&command, &mut store.map)?;
         }
 
         Ok(store)
+    }
+
+    pub fn compact(&mut self) -> Result<()> {
+        let log_path = self.file_path.as_ref().expect("file path not initialized");
+        let commands = convert_map_to_commands(&self.map);
+        let logs_content = serialize_commands(&commands)?;
+        fs::write(log_path.as_path(), logs_content).with_whatever_context(|_| {
+            format!("Couldn't write to file at {}", log_path.display())
+        })?;
+        self.log_count = self.map.len();
+        Ok(())
     }
 }
 
@@ -135,7 +161,11 @@ impl KvsEngine for KvStoreV2 {
         };
         let file_path = self.file_path.as_ref().expect("file path not initialized");
         append_command(command, file_path)?;
+        self.log_count += 1;
         self.map.insert(key, value);
+        if self.log_count >= 2 * self.map.len() {
+            self.compact()?;
+        }
         Ok(())
     }
 
@@ -144,12 +174,18 @@ impl KvsEngine for KvStoreV2 {
     }
 
     fn remove(&mut self, key: String) -> Result<()> {
-        let command = Command::Rm { key: key.clone() };
-        let file_path = self.file_path.as_ref().expect("file path not initialized");
-        append_command(command, file_path)?;
         let value = self.map.remove(&key);
         match value {
-            Some(_) => Ok(()),
+            Some(_) => {
+                let command = Command::Rm { key: key.clone() };
+                let file_path = self.file_path.as_ref().expect("file path not initialized");
+                append_command(command, file_path)?;
+                self.log_count += 1;
+                if self.log_count >= 2 * self.map.len() {
+                    self.compact()?;
+                }
+                Ok(())
+            }
             None => Err(Error::KeyNotFound { key }),
         }
     }
@@ -323,6 +359,83 @@ mod tests_pure_fns {
                 file_content,
                 "{\"type\":\"Set\",\"key\":\"key1\",\"value\":\"value1\"}\n"
             );
+        }
+    }
+
+    mod convert_map_to_commands {
+        use super::*;
+
+        #[test]
+        fn success() {
+            let store = HashMap::from([
+                ("key1".to_owned(), "value1".to_owned()),
+                ("key2".to_owned(), "value2".to_owned()),
+                ("key3".to_owned(), "value3".to_owned()),
+            ]);
+            let mut commands = convert_map_to_commands(&store);
+            assert_eq!(commands.len(), 3);
+            commands.sort_by(|a, b| format!("{:?}", a).cmp(&format!("{:?}", b)));
+            assert_eq!(
+                commands[0],
+                Command::Set {
+                    key: "key1".to_owned(),
+                    value: "value1".to_owned()
+                }
+            );
+            assert_eq!(
+                commands[1],
+                Command::Set {
+                    key: "key2".to_owned(),
+                    value: "value2".to_owned()
+                }
+            );
+            assert_eq!(
+                commands[2],
+                Command::Set {
+                    key: "key3".to_owned(),
+                    value: "value3".to_owned()
+                }
+            );
+        }
+    }
+
+    mod compact {
+        use super::*;
+
+        #[test]
+        fn success() {
+            let temp_dir =
+                tempfile::tempdir().expect("unable to create temporary working directory");
+            let file_path = temp_dir.path().join(DEFAULT_FILE_NAME);
+            let mut store = KvStoreV2::open(temp_dir.path()).expect("unable to initialize file");
+
+            store
+                .set("key1".to_owned(), "value1".to_owned())
+                .expect("unable to set key");
+            store
+                .set("key1".to_owned(), "value2".to_owned())
+                .expect("unable to set key");
+            store
+                .set("key1".to_owned(), "value3".to_owned())
+                .expect("unable to set key");
+            store
+                .set("key2".to_owned(), "value1".to_owned())
+                .expect("unable to set key");
+            store
+                .set("key2".to_owned(), "value2".to_owned())
+                .expect("unable to set key");
+
+            store.compact().expect("unable to compact");
+
+            assert_eq!(
+                store.get("key1".to_owned()).expect("unable to get key"),
+                Some("value3".to_owned()),
+            );
+            assert_eq!(
+                store.get("key2".to_owned()).expect("unable to get key"),
+                Some("value2".to_owned()),
+            );
+            assert_eq!(store.map.len(), 2,);
         }
     }
 }
