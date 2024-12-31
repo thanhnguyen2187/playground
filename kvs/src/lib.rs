@@ -1,6 +1,12 @@
 mod err;
+mod server;
+mod engine;
+mod store;
 
 pub use err::{Error, Result};
+pub use store::KvStoreV2;
+pub use engine::KvsEngine;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;

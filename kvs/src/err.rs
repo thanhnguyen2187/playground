@@ -1,4 +1,5 @@
 use snafu::prelude::*;
+pub use snafu::ResultExt;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
@@ -28,6 +29,13 @@ pub enum Error {
 
     #[snafu(display("Couldn't write to file at {path}"))]
     FileWrite { path: String, err_str: String },
+
+    #[snafu(whatever, display("{message}"))]
+    Whatever {
+        message: String,
+        #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
+        source: Option<Box<dyn std::error::Error>>,
+    },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
