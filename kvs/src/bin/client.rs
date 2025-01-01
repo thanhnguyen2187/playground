@@ -37,13 +37,13 @@ fn main() -> kvs::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Get { key } => {
+        Commands::Get { key: _ } => {
             unimplemented!()
         }
-        Commands::Set { key, value } => {
+        Commands::Set { key: _, value: _ } => {
             unimplemented!()
         }
-        Commands::Rm { key } => {
+        Commands::Rm { key: _ } => {
             unimplemented!()
         }
     }

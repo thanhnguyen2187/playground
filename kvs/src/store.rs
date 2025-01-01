@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use snafu::whatever;
 use std::collections::HashMap;
 use std::fs;
-use std::fs::{read_to_string, File, OpenOptions};
+use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 

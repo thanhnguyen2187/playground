@@ -38,8 +38,14 @@ impl Display for Engine {
 async fn main() -> kvs::Result<()> {
     let cli = Cli::parse();
 
-    println!("addr: {:?}", cli.addr);
-    println!("engine: {:?}", cli.engine);
+    eprintln!("Current version: {:?}", env!("CARGO_PKG_VERSION"));
+    eprintln!("Started server at: {:?}", cli.addr);
+    eprintln!("Used engine: {:?}", {
+        match cli.engine {
+            Engine::Kvs => "kvs",
+            Engine::Sled => "sled",
+        }
+    });
 
     let app = Router::new().route("/", get(|| async { "Hello, World!" }));
     let listener = tokio::net::TcpListener::bind(cli.addr).await.unwrap();
