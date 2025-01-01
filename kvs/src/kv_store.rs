@@ -8,7 +8,7 @@ use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-const DEFAULT_FILE_NAME: &str = "kvs.db";
+pub const DEFAULT_FILE_NAME: &str = "kvs.db";
 
 /// Make sure that the file exists and is writable.
 pub fn initialize(file_path: &Path) -> Result<()> {

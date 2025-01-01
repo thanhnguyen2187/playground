@@ -6,8 +6,13 @@ use env_logger::Env;
 use kvs::Result;
 use log::{error, info};
 use snafu::whatever;
+use std::cmp::PartialEq;
+use std::collections::HashMap;
+use std::env;
 use std::fmt::Display;
+use std::fs::File;
 use std::net::SocketAddr;
+use std::path::Path;
 
 #[derive(Parser)]
 #[command(version)]
@@ -22,7 +27,7 @@ struct Cli {
     engine: Engine,
 }
 
-#[derive(ValueEnum, Default, Debug, Clone)]
+#[derive(ValueEnum, PartialEq, Eq, Hash, Default, Debug, Clone)]
 enum Engine {
     /// A custom key-value store
     #[default]
@@ -50,6 +55,29 @@ fn validate_addr(addr: &str) -> Result<()> {
     }
 }
 
+/// Checks for the existence of other engines' database files. For example, if we are using
+/// `kvs`, then `sled` database file should not exist and vice versa.
+fn check_engine_db_file(engine: &Engine) -> Result<()> {
+    let engine_db_files: HashMap<Engine, _> = HashMap::from([
+        (Engine::Kvs, Path::new(kvs::DEFAULT_FILE_NAME_KVS).exists()),
+        (
+            Engine::Sled,
+            Path::new(kvs::DEFAULT_FILE_NAME_SLED).exists(),
+        ),
+    ]);
+    for (engine_checking, db_file_exists) in engine_db_files {
+        if engine_checking != *engine && db_file_exists {
+            return whatever!(
+                "Current engine is {} while database file for engine {} existed",
+                engine,
+                engine_checking,
+            );
+        }
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("trace")).init();
@@ -67,7 +95,30 @@ async fn main() -> Result<()> {
         }
     });
 
-    let app = Router::new().route("/", get(|| async { "Hello, World!" }));
+    if let Err(err) = check_engine_db_file(&cli.engine) {
+        error!(
+            "Database file of engines other than {} already exists",
+            cli.engine,
+        );
+        return Err(err);
+    }
+
+    let current_dir = env::current_dir().unwrap();
+    let mut app = Router::new();
+    match cli.engine {
+        Engine::Kvs => {
+            let _ = kvs::KvStoreV2::open(current_dir.as_path())?;
+            //     app = app.route("/kvs/get/:key", get(kvs_get));
+            //     app = app.route("/kvs/set/:key", get(kvs_set));
+            //     app = app.route("/kvs/delete/:key", get(kvs_delete));
+        }
+        Engine::Sled => {
+            let _ = kvs::SledStore::open(current_dir.as_path())?;
+            // app = app.route("/sled/get/:key", get(sled_get));
+            // app = app.route("/sled/set/:key", get(sled_set));
+            // app = app.route("/sled/delete/:key", get(sled_delete));
+        }
+    }
     let listener = tokio::net::TcpListener::bind(cli.addr).await.unwrap();
 
     axum::serve(listener, app).await.unwrap();
