@@ -3,7 +3,7 @@ use axum::Router;
 use clap::{Parser, ValueEnum};
 use env_logger;
 use env_logger::Env;
-use kvs::Result;
+use kvs::{KvStoreV2, KvsEngine, Result, SledStore};
 use log::{error, info};
 use snafu::whatever;
 use std::cmp::PartialEq;
@@ -13,19 +13,9 @@ use std::fmt::Display;
 use std::fs::File;
 use std::net::SocketAddr;
 use std::path::Path;
+use std::sync::Arc;
 
-#[derive(Parser)]
-#[command(version)]
-#[command(propagate_version = true)]
-struct Cli {
-    /// The address of the server
-    #[arg(long, default_value_t = String::from("127.0.0.1:4004"))]
-    addr: String,
-
-    /// The underlying engine to use
-    #[arg(long, default_value_t)]
-    engine: Engine,
-}
+mod handlers;
 
 #[derive(ValueEnum, PartialEq, Eq, Hash, Default, Debug, Clone)]
 enum Engine {
@@ -45,6 +35,26 @@ impl Display for Engine {
     }
 }
 
+pub struct AppState {
+    engine: Engine,
+    // TODO: use dashmap (https://docs.rs/dashmap/latest/dashmap/struct.DashMap.html)
+    //       to make it thread-safe instead of hand-rolling it
+    store: Box<dyn KvsEngine<Target = ()>>,
+}
+
+#[derive(Parser)]
+#[command(version)]
+#[command(propagate_version = true)]
+struct Cli {
+    /// The address of the server
+    #[arg(long, default_value_t = String::from("127.0.0.1:4004"))]
+    addr: String,
+
+    /// The underlying engine to use
+    #[arg(long, default_value_t)]
+    engine: Engine,
+}
+
 fn validate_addr(addr: &str) -> Result<()> {
     match addr.parse::<SocketAddr>() {
         Ok(_) => Ok(()),
@@ -52,6 +62,19 @@ fn validate_addr(addr: &str) -> Result<()> {
             "Invalid binding address; expected [ip-v4-host]:[port]; got {}",
             addr,
         ),
+    }
+}
+
+#[cfg(test)]
+mod validate_addr {
+    use super::*;
+
+    #[test]
+    fn all() {
+        assert!(validate_addr("127.0.0.1:4004").is_ok());
+        assert!(validate_addr("0.0.0.0:4004").is_ok());
+        assert!(validate_addr("").is_err());
+        assert!(validate_addr("abc.xyz").is_err());
     }
 }
 
@@ -67,7 +90,7 @@ fn check_engine_db_file(engine: &Engine) -> Result<()> {
     ]);
     for (engine_checking, db_file_exists) in engine_db_files {
         if engine_checking != *engine && db_file_exists {
-            return whatever!(
+            whatever!(
                 "Current engine is {} while database file for engine {} existed",
                 engine,
                 engine_checking,
@@ -104,21 +127,17 @@ async fn main() -> Result<()> {
     }
 
     let current_dir = env::current_dir().unwrap();
-    let mut app = Router::new();
-    match cli.engine {
-        Engine::Kvs => {
-            let _ = kvs::KvStoreV2::open(current_dir.as_path())?;
-            //     app = app.route("/kvs/get/:key", get(kvs_get));
-            //     app = app.route("/kvs/set/:key", get(kvs_set));
-            //     app = app.route("/kvs/delete/:key", get(kvs_delete));
-        }
-        Engine::Sled => {
-            let _ = kvs::SledStore::open(current_dir.as_path())?;
-            // app = app.route("/sled/get/:key", get(sled_get));
-            // app = app.route("/sled/set/:key", get(sled_set));
-            // app = app.route("/sled/delete/:key", get(sled_delete));
-        }
-    }
+    let shared_state = Arc::new(AppState {
+        engine: cli.engine.clone(),
+        store: match cli.engine {
+            Engine::Kvs => Box::new(KvStoreV2::open(current_dir.as_path())?),
+            Engine::Sled => Box::new(SledStore::open(current_dir.as_path())?),
+        },
+    });
+
+    let app = Router::new()
+        .route("/kvs/get/:key", get(handlers::get_))
+        .with_state(shared_state);
     let listener = tokio::net::TcpListener::bind(cli.addr).await.unwrap();
 
     axum::serve(listener, app).await.unwrap();

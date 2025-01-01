@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
+use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 
 pub const DEFAULT_FILE_NAME: &str = "kvs.db";
@@ -149,6 +150,20 @@ impl KvStoreV2 {
         })?;
         self.log_count = self.map.len();
         Ok(())
+    }
+}
+
+impl DerefMut for KvStoreV2 {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        todo!()
+    }
+}
+
+impl Deref for KvStoreV2 {
+    type Target = KvStoreV2;
+
+    fn deref(&self) -> &Self::Target {
+        self
     }
 }
 
