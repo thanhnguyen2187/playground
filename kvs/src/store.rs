@@ -8,7 +8,7 @@ use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-const DEFAULT_FILE_NAME: &str = "kvs.jsonl";
+const DEFAULT_FILE_NAME: &str = "kvs.db";
 
 /// Make sure that the file exists and is writable.
 pub fn initialize(file_path: &Path) -> Result<()> {
@@ -195,6 +195,7 @@ mod tests_pure_fns {
     use super::*;
 
     mod initialize {
+        use std::fs::File;
         use super::*;
 
         #[test]
@@ -268,7 +269,6 @@ mod tests_pure_fns {
 
         #[test]
         fn success() {
-            let map: HashMap<String, String> = HashMap::new();
             let commands = vec![
                 Command::Set {
                     key: "key1".to_owned(),
@@ -405,7 +405,6 @@ mod tests_pure_fns {
         fn success() {
             let temp_dir =
                 tempfile::tempdir().expect("unable to create temporary working directory");
-            let file_path = temp_dir.path().join(DEFAULT_FILE_NAME);
             let mut store = KvStoreV2::open(temp_dir.path()).expect("unable to initialize file");
 
             store
@@ -444,6 +443,7 @@ mod tests_kv_store {
     use super::*;
 
     mod open {
+        use std::fs::File;
         use super::*;
         use std::io::Write;
 

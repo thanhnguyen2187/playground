@@ -1,7 +1,10 @@
 use axum::routing::get;
 use axum::Router;
 use clap::{Parser, ValueEnum};
+use kvs::Result;
+use snafu::whatever;
 use std::fmt::Display;
+use std::net::SocketAddr;
 
 #[derive(Parser)]
 #[command(version)]
@@ -34,11 +37,24 @@ impl Display for Engine {
     }
 }
 
+fn validate_addr(addr: &str) -> Result<()> {
+    match addr.parse::<SocketAddr>() {
+        Ok(_) => Ok(()),
+        Err(err) => whatever!(
+            "Invalid binding address; expected [ip-v4-host]:[port]; got {}",
+            addr,
+        ),
+    }
+}
+
 #[tokio::main]
-async fn main() -> kvs::Result<()> {
+async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     eprintln!("Current version: {:?}", env!("CARGO_PKG_VERSION"));
+
+    // TODO: validate engine by Clap instead of hard-coding
+    validate_addr(&cli.addr)?;
     eprintln!("Started server at: {:?}", cli.addr);
     eprintln!("Used engine: {:?}", {
         match cli.engine {
