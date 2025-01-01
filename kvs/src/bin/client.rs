@@ -1,6 +1,3 @@
-use std::env::current_dir;
-use std::path::Path;
-use std::process::exit;
 use clap::{Parser};
 
 #[derive(Parser)]
@@ -50,6 +47,4 @@ fn main() -> kvs::Result<()> {
             unimplemented!()
         }
     }
-
-    Ok(())
 }
