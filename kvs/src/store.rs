@@ -1,6 +1,5 @@
 use crate::engine::KvsEngine;
-use crate::err::{Result, ResultExt};
-use crate::{Command, Error};
+use crate::err::{Result, Error, ResultExt};
 use serde::{Deserialize, Serialize};
 use snafu::whatever;
 use std::collections::HashMap;
@@ -25,7 +24,7 @@ pub fn initialize(file_path: &Path) -> Result<()> {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
-pub enum KvCommand {
+pub enum Command {
     Get { key: String },
     Set { key: String, value: String },
     Rm { key: String },
