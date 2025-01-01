@@ -1,7 +1,10 @@
 use axum::routing::get;
 use axum::Router;
 use clap::{Parser, ValueEnum};
+use env_logger;
+use env_logger::Env;
 use kvs::Result;
+use log::{error, info};
 use snafu::whatever;
 use std::fmt::Display;
 use std::net::SocketAddr;
@@ -40,7 +43,7 @@ impl Display for Engine {
 fn validate_addr(addr: &str) -> Result<()> {
     match addr.parse::<SocketAddr>() {
         Ok(_) => Ok(()),
-        Err(err) => whatever!(
+        Err(_) => whatever!(
             "Invalid binding address; expected [ip-v4-host]:[port]; got {}",
             addr,
         ),
@@ -49,14 +52,15 @@ fn validate_addr(addr: &str) -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::Builder::from_env(Env::default().default_filter_or("trace")).init();
+    info!("Logger initialized!");
+    info!("Current binary version: {:?}", env!("CARGO_PKG_VERSION"));
+
     let cli = Cli::parse();
-
-    eprintln!("Current version: {:?}", env!("CARGO_PKG_VERSION"));
-
     // TODO: validate engine by Clap instead of hard-coding
     validate_addr(&cli.addr)?;
-    eprintln!("Started server at: {:?}", cli.addr);
-    eprintln!("Used engine: {:?}", {
+    info!("Started server at: {:?}", cli.addr);
+    info!("Chosen engine: {:?}", {
         match cli.engine {
             Engine::Kvs => "kvs",
             Engine::Sled => "sled",
