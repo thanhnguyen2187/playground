@@ -6,7 +6,7 @@ use snafu::whatever;
 use log::{info, warn};
 
 pub async fn get(State(state): State<AppState>, Path(key): Path<String>) -> Result<String> {
-    if let Ok(state_lock) = state.store.lock() {
+    if let Ok(state_lock) = state.store.read() {
         let state = state_lock.deref();
         let value_opt = state.get(key.clone())?;
         if let Some(value) = value_opt {
@@ -25,7 +25,7 @@ pub async fn set(
     State(state): State<AppState>,
     Path((key, value)): Path<(String, String)>,
 ) -> Result<&'static str> {
-    if let Ok(mut state_lock) = state.store.lock() {
+    if let Ok(mut state_lock) = state.store.write() {
         let state = state_lock.deref_mut();
         state.set(key.clone(), value.to_owned())?;
         info!("Set value for key {}", key);
@@ -39,7 +39,7 @@ pub async fn remove(
     State(state): State<AppState>,
     Path(key): Path<String>,
 ) -> Result<&'static str> {
-    if let Ok(mut state_lock) = state.store.lock() {
+    if let Ok(mut state_lock) = state.store.write() {
         let state = state_lock.deref_mut();
         state.remove(key.clone())?;
         info!("Removed value for key {}", key);

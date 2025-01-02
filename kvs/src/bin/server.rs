@@ -11,7 +11,7 @@ use std::env;
 use std::fmt::Display;
 use std::net::SocketAddr;
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 
 mod handlers;
 
@@ -40,7 +40,7 @@ impl Display for Engine {
 pub struct AppState {
     // TODO: use dashmap (https://docs.rs/dashmap/latest/dashmap/struct.DashMap.html)
     //       to make it thread-safe instead of hand-rolling it
-    store: Arc<Mutex<dyn KvsEngine>>,
+    store: Arc<RwLock<dyn KvsEngine>>,
 }
 
 #[derive(Parser)]
@@ -131,9 +131,9 @@ async fn main() -> Result<()> {
     let current_dir = env::current_dir().unwrap();
     let shared_state = AppState {
         store: match cli.engine {
-            Engine::Kvs => Arc::new(Mutex::new(KvStoreV2::open(current_dir.as_path())?)),
-            Engine::Sled => Arc::new(Mutex::new(SledStore::open(current_dir.as_path())?)),
-            Engine::Mem => Arc::new(Mutex::new(MemStore::new())),
+            Engine::Kvs => Arc::new(RwLock::new(KvStoreV2::open(current_dir.as_path())?)),
+            Engine::Sled => Arc::new(RwLock::new(SledStore::open(current_dir.as_path())?)),
+            Engine::Mem => Arc::new(RwLock::new(MemStore::new())),
         },
     };
 
