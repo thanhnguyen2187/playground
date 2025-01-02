@@ -110,7 +110,9 @@ pub fn convert_map_to_commands(store_underlying: &HashMap<String, String>) -> Ve
 
 pub struct KvStoreV2 {
     file_path: Option<PathBuf>,
-    map: Arc<RwLock<HashMap<String, String>>>,
+    // We can use `Arc<RwLock<HashMap<String, String>>>` here, but it should be fine as it will be
+    // handled by the server and its state-sharing scheme.
+    map: HashMap<String, String>,
     log_count: usize,
 }
 
@@ -118,7 +120,7 @@ impl KvStoreV2 {
     pub fn new() -> Self {
         Self {
             file_path: None,
-            map: Arc::new(RwLock::new(HashMap::new())),
+            map: HashMap::new(),
             log_count: 0,
         }
     }
@@ -135,13 +137,8 @@ impl KvStoreV2 {
                 format!("Couldn't read content of file at {}", file_path.display())
             })?)?;
         store.log_count = commands.len();
-        if let Ok(mut map_lock) = store.map.write() {
-            let map = map_lock.deref_mut();
-            for command in commands {
-                apply_command(&command, map)?;
-            }
-        } else {
-            whatever!("Unable to acquire write lock on map");
+        for command in commands {
+            apply_command(&command, &mut store.map)?;
         }
 
         Ok(store)
@@ -149,34 +146,16 @@ impl KvStoreV2 {
 
     pub fn compact(&mut self) -> Result<()> {
         let log_path = self.file_path.as_ref().expect("file path not initialized");
-        if let Ok(map_lock) = self.map.read() {
-            let map = map_lock.deref();
-            let commands = convert_map_to_commands(map);
-            let logs_content = serialize_commands(&commands)?;
-            fs::write(log_path.as_path(), logs_content).with_whatever_context(|_| {
-                format!("Couldn't write to file at {}", log_path.display())
-            })?;
-            self.log_count = map.len();
-            Ok(())
-        } else {
-            whatever!("Unable to acquire read lock on map");
-        }
+        let map = &self.map;
+        let commands = convert_map_to_commands(map);
+        let logs_content = serialize_commands(&commands)?;
+        fs::write(log_path.as_path(), logs_content).with_whatever_context(|_| {
+            format!("Couldn't write to file at {}", log_path.display())
+        })?;
+        self.log_count = map.len();
+        Ok(())
     }
 }
-
-// impl DerefMut for KvStoreV2 {
-//     fn deref_mut(&mut self) -> &mut Self::Target {
-//         todo!()
-//     }
-// }
-//
-// impl Deref for KvStoreV2 {
-//     type Target = ();
-//
-//     fn deref(&self) -> &Self::Target {
-//         todo!()
-//     }
-// }
 
 impl KvsEngine for KvStoreV2 {
     fn set(&mut self, key: String, value: String) -> Result<()> {
@@ -185,59 +164,33 @@ impl KvsEngine for KvStoreV2 {
             value: value.clone(),
         };
         let file_path = self.file_path.as_ref().expect("file path not initialized");
-        if let Ok(mut map_lock) = self.map.write() {
-            let map = map_lock.deref_mut();
-            self.log_count += 1;
-            append_command(command, file_path)?;
-            map.insert(key, value);
-        } else {
-            whatever!("Unable to acquire write lock on map");
-        };
-        let map_len = if let Ok(map_lock) = self.map.read() {
-            let map = map_lock.deref();
-            map.len()
-        } else {
-            whatever!("Unable to acquire read lock on map");
-        };
-        if self.log_count >= map_len {
+        self.log_count += 1;
+        append_command(command, file_path)?;
+        self.map.insert(key, value);
+        if self.log_count >= self.map.len() {
             self.compact()?;
         }
         Ok(())
     }
 
     fn get(&self, key: String) -> Result<Option<String>> {
-        if let Ok(map_lock) = self.map.read() {
-            let map = map_lock.deref();
-            Ok(map.get(&key).cloned())
-        } else {
-            whatever!("Unable to acquire read lock on map");
-        }
+        let map = &self.map;
+        Ok(map.get(&key).cloned())
     }
 
     fn remove(&mut self, key: String) -> Result<()> {
-        if let Ok(mut map_lock) = self.map.write() {
-            let map = map_lock.deref_mut();
-            let value = map.remove(&key);
-            match value {
-                Some(_) => {
-                    let command = Command::Rm { key: key.clone() };
-                    let file_path = self.file_path.as_ref().expect("file path not initialized");
-                    append_command(command, file_path)?;
-                    self.log_count += 1;
-                }
-                None => whatever!("Key not found"),
+        let value = self.map.remove(&key);
+        match value {
+            Some(_) => {
+                let command = Command::Rm { key: key.clone() };
+                let file_path = self.file_path.as_ref().expect("file path not initialized");
+                append_command(command, file_path)?;
+                self.log_count += 1;
             }
-        } else {
-            whatever!("Unable to acquire write lock on map");
+            None => whatever!("Key not found"),
         }
 
-        let map_len = if let Ok(map_lock) = self.map.read() {
-            let map = map_lock.deref();
-            map.len()
-        } else {
-            whatever!("Unable to acquire read lock on map");
-        };
-        if self.log_count >= map_len {
+        if self.log_count >= self.map.len() {
             self.compact()?;
         }
 
@@ -489,13 +442,7 @@ mod tests_pure_fns {
                 Some("value2".to_owned()),
             );
 
-            if let Ok(map_lock) = store.map.read() {
-                let map = map_lock.deref();
-                assert_eq!(map.len(), 2,);
-            } else {
-                unreachable!("Unable to acquire read lock on map");
-            }
-            drop(store);
+            assert_eq!(store.map.len(), 2,);
         }
     }
 }
@@ -550,10 +497,7 @@ mod tests_kv_store {
 
             let store = KvStoreV2::open(temp_dir.path()).expect("unable to initialize file");
 
-            let Ok(map_lock) = store.map.read() else {
-                unreachable!("Unable to acquire read lock on map");
-            };
-            let map = map_lock.deref();
+            let map = store.map;
             assert_eq!(map.len(), commands.len());
             assert_eq!(map.get("key1").unwrap(), "value1");
             assert_eq!(map.get("key2").unwrap(), "value2");
