@@ -1,24 +1,20 @@
 use crate::AppState;
 use axum::extract::{Path, State};
 use std::ops::{Deref, DerefMut};
-// use axum::response::IntoResponse;
-use axum::Json;
-use kvs::{Error, Result};
+use kvs::{Result};
 use snafu::whatever;
-use std::sync::{Arc, Mutex};
 use log::{info, warn};
 
-pub async fn get(State(state): State<AppState>, Path(key): Path<String>) -> Result<Json<String>> {
-    println!("key: {:?}", key);
+pub async fn get(State(state): State<AppState>, Path(key): Path<String>) -> Result<String> {
     if let Ok(state_lock) = state.store.lock() {
         let state = state_lock.deref();
         let value_opt = state.get(key.clone())?;
         if let Some(value) = value_opt {
             info!("Found value for key {}", key);
-            Ok(Json(value))
+            Ok(value)
         } else {
             warn!("Couldn't find value for key {}", key);
-            Ok(Json("Not found".to_owned()))
+            Ok("Not found".to_owned())
         }
     } else {
         whatever!("Unable to acquire write lock on state");
@@ -31,7 +27,8 @@ pub async fn set(
 ) -> Result<&'static str> {
     if let Ok(mut state_lock) = state.store.lock() {
         let state = state_lock.deref_mut();
-        state.set(key, value.to_owned())?;
+        state.set(key.clone(), value.to_owned())?;
+        info!("Set value for key {}", key);
         Ok("Success!")
     } else {
         whatever!("Unable to acquire write lock on state");

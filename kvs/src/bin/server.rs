@@ -1,7 +1,6 @@
 use axum::routing::get;
 use axum::Router;
 use clap::{Parser, ValueEnum};
-use env_logger;
 use env_logger::Env;
 use kvs::{KvStoreV2, KvsEngine, Result, SledStore};
 use log::{error, info};
@@ -10,7 +9,6 @@ use std::cmp::PartialEq;
 use std::collections::HashMap;
 use std::env;
 use std::fmt::Display;
-use std::fs::File;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -37,7 +35,6 @@ impl Display for Engine {
 
 #[derive(Clone)]
 pub struct AppState {
-    engine: Engine,
     // TODO: use dashmap (https://docs.rs/dashmap/latest/dashmap/struct.DashMap.html)
     //       to make it thread-safe instead of hand-rolling it
     store: Arc<Mutex<dyn KvsEngine>>,
@@ -129,7 +126,6 @@ async fn main() -> Result<()> {
 
     let current_dir = env::current_dir().unwrap();
     let shared_state = AppState {
-        engine: cli.engine.clone(),
         store: match cli.engine {
             Engine::Kvs => Arc::new(Mutex::new(KvStoreV2::open(current_dir.as_path())?)),
             Engine::Sled => Arc::new(Mutex::new(SledStore::open(current_dir.as_path())?)),
