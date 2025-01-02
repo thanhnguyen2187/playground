@@ -1,5 +1,5 @@
 // use std::ops::DerefMut;
-use crate::err::{Result};
+use crate::err::Result;
 
 pub trait KvsEngine: Send + Sync {
     fn set(&mut self, key: String, value: String) -> Result<()>;

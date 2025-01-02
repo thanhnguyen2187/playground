@@ -1,6 +1,6 @@
 use crate::err::Result;
-use std::collections::HashMap;
 use crate::KvsEngine;
+use std::collections::HashMap;
 
 pub struct MemStore {
     map: HashMap<String, String>,

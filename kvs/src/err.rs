@@ -1,7 +1,7 @@
-use snafu::prelude::*;
-use axum::{Json};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use axum::Json;
+use snafu::prelude::*;
 pub use snafu::ResultExt;
 
 #[derive(Debug, Snafu)]
@@ -43,10 +43,7 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(self.to_string()),
-        ).into_response()
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(self.to_string())).into_response()
     }
 }
 

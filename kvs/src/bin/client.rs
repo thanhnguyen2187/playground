@@ -1,4 +1,4 @@
-use clap::{Parser};
+use clap::Parser;
 
 #[derive(Parser)]
 #[command(version)]
@@ -17,7 +17,7 @@ enum Commands {
     /// Get a value from the store
     Get {
         /// The key to be retrieved
-        key: String
+        key: String,
     },
     /// Set a value in the store
     Set {
@@ -29,7 +29,7 @@ enum Commands {
     /// Remove a value from the store
     Rm {
         /// The key to be removed
-        key: String
+        key: String,
     },
 }
 
