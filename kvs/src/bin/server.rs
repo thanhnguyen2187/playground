@@ -13,7 +13,7 @@ use std::fmt::Display;
 use std::fs::File;
 use std::net::SocketAddr;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 mod handlers;
 
@@ -35,11 +35,12 @@ impl Display for Engine {
     }
 }
 
+#[derive(Clone)]
 pub struct AppState {
     engine: Engine,
     // TODO: use dashmap (https://docs.rs/dashmap/latest/dashmap/struct.DashMap.html)
     //       to make it thread-safe instead of hand-rolling it
-    store: Box<dyn KvsEngine<Target = ()>>,
+    store: Arc<Mutex<dyn KvsEngine>>,
 }
 
 #[derive(Parser)]
@@ -127,16 +128,17 @@ async fn main() -> Result<()> {
     }
 
     let current_dir = env::current_dir().unwrap();
-    let shared_state = Arc::new(AppState {
+    let shared_state = AppState {
         engine: cli.engine.clone(),
         store: match cli.engine {
-            Engine::Kvs => Box::new(KvStoreV2::open(current_dir.as_path())?),
-            Engine::Sled => Box::new(SledStore::open(current_dir.as_path())?),
+            Engine::Kvs => Arc::new(Mutex::new(KvStoreV2::open(current_dir.as_path())?)),
+            Engine::Sled => Arc::new(Mutex::new(SledStore::open(current_dir.as_path())?)),
         },
-    });
+    };
 
     let app = Router::new()
-        .route("/kvs/get/:key", get(handlers::get_))
+        .route("/v1/get/:key", get(handlers::get))
+        .route("/v1/set/:key/:value", get(handlers::set))
         .with_state(shared_state);
     let listener = tokio::net::TcpListener::bind(cli.addr).await.unwrap();
 

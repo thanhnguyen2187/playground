@@ -1,4 +1,7 @@
 use snafu::prelude::*;
+use axum::{Json};
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
 pub use snafu::ResultExt;
 
 #[derive(Debug, Snafu)]
@@ -36,6 +39,15 @@ pub enum Error {
         #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
         source: Option<Box<dyn std::error::Error>>,
     },
+}
+
+impl IntoResponse for Error {
+    fn into_response(self) -> axum::response::Response {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(self.to_string()),
+        ).into_response()
+    }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

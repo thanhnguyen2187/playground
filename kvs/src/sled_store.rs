@@ -57,7 +57,7 @@ impl KvsEngine for SledStore {
         todo!()
     }
 
-    fn get(&mut self, key: String) -> Result<Option<String>> {
+    fn get(&self, key: String) -> Result<Option<String>> {
         todo!()
     }
 
