@@ -1,7 +1,7 @@
 use crate::err::Result;
 use crate::KvsEngine;
 use sled;
-use snafu::ResultExt;
+use snafu::{whatever, ResultExt};
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 
@@ -38,30 +38,43 @@ impl SledStore {
     }
 }
 
-impl DerefMut for SledStore {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        todo!()
-    }
-}
-
-impl Deref for SledStore {
-    type Target = SledStore;
-
-    fn deref(&self) -> &Self::Target {
-        todo!()
-    }
-}
-
 impl KvsEngine for SledStore {
     fn set(&mut self, key: String, value: String) -> Result<()> {
-        todo!()
+        let Some(db) = self.db.as_ref() else {
+            whatever!("Sled store not initialized");
+        };
+        db.insert(key.clone(), value.as_bytes())
+            .with_whatever_context(|_| format!("Couldn't insert key {} into sled store", key))?;
+
+        Ok(())
     }
 
     fn get(&self, key: String) -> Result<Option<String>> {
-        todo!()
+        let Some(db) = self.db.as_ref() else {
+            whatever!("Sled store not initialized");
+        };
+
+        let value_option = db
+            .get(key.clone())
+            .with_whatever_context(|_| format!("Couldn't get key {} from sled store", key))?;
+        if let Some(value) = value_option {
+            let value = String::from_utf8(value.to_vec()).with_whatever_context(|_| {
+                format!("Couldn't convert value for key {} to UTF-8", key)
+            })?;
+            Ok(Some(value))
+        } else {
+            Ok(None)
+        }
     }
 
     fn remove(&mut self, key: String) -> Result<()> {
-        todo!()
+        let Some(db) = self.db.as_ref() else {
+            whatever!("Sled store not initialized");
+        };
+
+        db.remove(key.clone())
+            .with_whatever_context(|_| format!("Couldn't remove key {} from sled store", key))?;
+
+        Ok(())
     }
 }
