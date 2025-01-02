@@ -1,9 +1,9 @@
 use crate::AppState;
 use axum::extract::{Path, State};
-use std::ops::{Deref, DerefMut};
-use kvs::{Result};
-use snafu::whatever;
+use kvs::Result;
 use log::{info, warn};
+use snafu::whatever;
+use std::ops::{Deref, DerefMut};
 
 pub async fn get(State(state): State<AppState>, Path(key): Path<String>) -> Result<String> {
     if let Ok(state_lock) = state.store.read() {
@@ -47,4 +47,8 @@ pub async fn remove(
     } else {
         whatever!("Unable to acquire write lock on state");
     }
+}
+
+pub async fn not_found() -> &'static str {
+    "Not found"
 }
