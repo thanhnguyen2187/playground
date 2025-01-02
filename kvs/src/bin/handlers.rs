@@ -34,3 +34,17 @@ pub async fn set(
         whatever!("Unable to acquire write lock on state");
     }
 }
+
+pub async fn remove(
+    State(state): State<AppState>,
+    Path(key): Path<String>,
+) -> Result<&'static str> {
+    if let Ok(mut state_lock) = state.store.lock() {
+        let state = state_lock.deref_mut();
+        state.remove(key.clone())?;
+        info!("Removed value for key {}", key);
+        Ok("Success!")
+    } else {
+        whatever!("Unable to acquire write lock on state");
+    }
+}

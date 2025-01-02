@@ -1,8 +1,8 @@
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::Router;
 use clap::{Parser, ValueEnum};
 use env_logger::Env;
-use kvs::{KvStoreV2, KvsEngine, Result, SledStore};
+use kvs::{KvStoreV2, KvsEngine, MemStore, Result, SledStore};
 use log::{error, info};
 use snafu::whatever;
 use std::cmp::PartialEq;
@@ -22,6 +22,8 @@ enum Engine {
     Kvs,
     /// A key-value store using sled
     Sled,
+    /// A key-value store using in-memory
+    Mem,
 }
 
 impl Display for Engine {
@@ -29,6 +31,7 @@ impl Display for Engine {
         match self {
             Engine::Kvs => write!(f, "kvs"),
             Engine::Sled => write!(f, "sled"),
+            Engine::Mem => write!(f, "in-memory"),
         }
     }
 }
@@ -113,6 +116,7 @@ async fn main() -> Result<()> {
         match cli.engine {
             Engine::Kvs => "kvs",
             Engine::Sled => "sled",
+            Engine::Mem => "in-memory",
         }
     });
 
@@ -129,12 +133,14 @@ async fn main() -> Result<()> {
         store: match cli.engine {
             Engine::Kvs => Arc::new(Mutex::new(KvStoreV2::open(current_dir.as_path())?)),
             Engine::Sled => Arc::new(Mutex::new(SledStore::open(current_dir.as_path())?)),
+            Engine::Mem => Arc::new(Mutex::new(MemStore::new())),
         },
     };
 
     let app = Router::new()
         .route("/v1/get/:key", get(handlers::get))
-        .route("/v1/set/:key/:value", get(handlers::set))
+        .route("/v1/set/:key/:value", post(handlers::set))
+        .route("/v1/rm/:key", post(handlers::remove))
         .with_state(shared_state);
     let listener = tokio::net::TcpListener::bind(cli.addr).await.unwrap();
 
