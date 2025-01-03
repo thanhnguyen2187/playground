@@ -138,9 +138,9 @@ async fn main() -> Result<()> {
     };
 
     let app = Router::new()
-        .route("/v1/get/:key", get(handlers::get))
-        .route("/v1/set/:key/:value", post(handlers::set))
-        .route("/v1/rm/:key", post(handlers::remove))
+        .route("/v1/get/{key}", get(handlers::get))
+        .route("/v1/set/{key}/{value}", post(handlers::set))
+        .route("/v1/rm/{key}", post(handlers::remove))
         .fallback(handlers::not_found)
         .with_state(shared_state);
     let listener = tokio::net::TcpListener::bind(cli.addr).await.unwrap();
