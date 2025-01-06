@@ -26,9 +26,9 @@ direnv: export +AR +AS +CC +CONFIG_SHELL +CXX +HOST_PATH +IN_NIX_SHELL +LD +NIX_
 rust-rover > /dev/null 2>&1 &!
 ```
 
-We do this to make that the IDE is inheriting the environment variables from 
-the shell. Without the inheritance, the shell within the IDE won't be able to
-build the project.
+We do this to make sure that the IDE (and its spawned shells) is inheriting the
+environment variables from the shell. Without the inheritance, the shell within
+the IDE won't be able to build the project.
 
 - Build:
 
