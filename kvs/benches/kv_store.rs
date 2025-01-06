@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use kvs::{KvStoreV2, KvsEngine};
+use kvs::{KvStoreV2, KvsEngine, MemStore};
 use rand::{
     distributions::{Alphanumeric, DistString},
     Rng, SeedableRng,
@@ -62,5 +62,32 @@ pub fn bench_sled(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, bench_kvs, bench_sled);
+pub fn bench_mem(c: &mut Criterion) {
+    let mut store = MemStore::new();
+
+    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(0);
+    let mut keys: Vec<String> = Vec::new();
+    c.bench_function("mem_write", |b| {
+        b.iter(|| {
+            // for _ in 0..100 {
+            let key_len = rng.gen_range(1..100_000);
+            let key: String = Alphanumeric.sample_string(&mut rng, key_len);
+            keys.push(key.clone());
+            let value_len = rng.gen_range(1..100_000);
+            let value: String = Alphanumeric.sample_string(&mut rng, value_len);
+            store.set(key, value).unwrap();
+            // }
+        })
+    });
+
+    c.bench_function("mem_read", |b| {
+        b.iter(|| {
+            for key in &keys {
+                store.get(key.clone()).unwrap();
+            }
+        })
+    });
+}
+
+criterion_group!(benches, bench_kvs, bench_sled, bench_mem);
 criterion_main!(benches);
