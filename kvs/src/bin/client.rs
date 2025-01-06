@@ -1,6 +1,10 @@
 use clap::Parser;
+use cli::parse_addr::parse_addr;
 use snafu::ResultExt;
-use std::fmt::format;
+
+mod cli {
+    pub mod parse_addr;
+}
 
 #[derive(Parser)]
 #[command(version)]
@@ -10,7 +14,7 @@ struct Cli {
     command: Commands,
 
     /// The address of the server
-    #[arg(default_value_t = String::from("http://127.0.0.1:4004"))]
+    #[arg(long, default_value_t = String::from("127.0.0.1:4004"), global = true)]
     addr: String,
 }
 
@@ -38,12 +42,18 @@ enum Commands {
 #[tokio::main]
 async fn main() -> kvs::Result<()> {
     let cli = Cli::parse();
+    parse_addr(&cli.addr)?;
     let client = reqwest::Client::new();
+    let addr = if cli.addr.starts_with("http://") || cli.addr.starts_with("https://") {
+        cli.addr
+    } else {
+        format!("http://{}", cli.addr)
+    };
 
     match cli.command {
         Commands::Get { key } => {
             let resp = client
-                .get(format!("{}/v1/get/{}", cli.addr, key))
+                .get(format!("{}/v1/get/{}", addr, key))
                 .send()
                 .await
                 .with_whatever_context(|_| "Unable to connect to server")?
@@ -54,7 +64,7 @@ async fn main() -> kvs::Result<()> {
         }
         Commands::Set { key, value } => {
             let resp = client
-                .post(format!("{}/v1/set/{}/{}", cli.addr, key, value))
+                .post(format!("{}/v1/set/{}/{}", addr, key, value))
                 .send()
                 .await
                 .with_whatever_context(|_| "Unable to connect to server")?
@@ -65,7 +75,7 @@ async fn main() -> kvs::Result<()> {
         }
         Commands::Rm { key } => {
             let resp = client
-                .post(format!("{}/v1/rm/{}", cli.addr, key))
+                .post(format!("{}/v1/rm/{}", addr, key))
                 .send()
                 .await
                 .with_whatever_context(|_| "Unable to connect to server")?
