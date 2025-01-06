@@ -1,6 +1,5 @@
-use crate::AppState;
 use axum::extract::{Path, State};
-use kvs::Result;
+use kvs::{Result, AppState};
 use log::{info, warn};
 use snafu::whatever;
 use std::ops::{Deref, DerefMut};
@@ -52,3 +51,5 @@ pub async fn remove(
 pub async fn not_found() -> &'static str {
     "Not found"
 }
+
+pub fn main() {}

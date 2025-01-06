@@ -2,7 +2,7 @@ use axum::routing::{get, post};
 use axum::Router;
 use clap::{Parser, ValueEnum};
 use env_logger::Env;
-use kvs::{KvStoreV2, KvsEngine, MemStore, Result, SledStore};
+use kvs::{AppState, KvStoreV2, KvsEngine, MemStore, Result, SledStore};
 use log::{error, info};
 use snafu::whatever;
 use std::cmp::PartialEq;
@@ -34,13 +34,6 @@ impl Display for Engine {
             Engine::Mem => write!(f, "in-memory"),
         }
     }
-}
-
-#[derive(Clone)]
-pub struct AppState {
-    // TODO: use dashmap (https://docs.rs/dashmap/latest/dashmap/struct.DashMap.html)
-    //       to make it thread-safe instead of hand-rolling it
-    store: Arc<RwLock<dyn KvsEngine>>,
 }
 
 #[derive(Parser)]
