@@ -178,23 +178,21 @@ impl KvsEngine for KvStoreV2 {
         Ok(map.get(&key).cloned())
     }
 
-    fn remove(&mut self, key: String) -> Result<()> {
-        let value = self.map.remove(&key);
-        match value {
-            Some(_) => {
+    fn remove(&mut self, key: String) -> Result<Option<String>> {
+        let value_opt = self.map.remove(&key);
+        match value_opt {
+            Some(value) => {
                 let command = Command::Rm { key: key.clone() };
                 let file_path = self.file_path.as_ref().expect("file path not initialized");
                 append_command(command, file_path)?;
                 self.log_count += 1;
+                if self.log_count >= self.map.len() {
+                    self.compact()?;
+                }
+                Ok(Some(value))
             }
-            None => whatever!("Key not found"),
+            None => Ok(None),
         }
-
-        if self.log_count >= self.map.len() {
-            self.compact()?;
-        }
-
-        Ok(())
     }
 }
 

@@ -59,19 +59,30 @@ async fn main() -> kvs::Result<()> {
                 .with_whatever_context(|_| "Unable to connect to server")?
                 .text()
                 .await
-                .with_whatever_context(|_| "Unable to read response from server");
-            println!("{}", resp?);
+                .with_whatever_context(|_| "Unable to read response from server")?;
+            println!("{}", resp);
         }
         Commands::Set { key, value } => {
             let resp = client
                 .post(format!("{}/v1/set/{}/{}", addr, key, value))
                 .send()
                 .await
-                .with_whatever_context(|_| "Unable to connect to server")?
-                .text()
-                .await
-                .with_whatever_context(|_| "Unable to read response from server");
-            println!("{}", resp?);
+                .with_whatever_context(|_| "Unable to connect to server")?;
+            if resp.status().is_success() {
+                print!(
+                    "{}",
+                    resp.text()
+                        .await
+                        .with_whatever_context(|_| "Unable to read response from server")?
+                );
+            } else {
+                eprint!(
+                    "{}",
+                    resp.text()
+                        .await
+                        .with_whatever_context(|_| "Unable to read response from server")?
+                );
+            }
         }
         Commands::Rm { key } => {
             let resp = client
@@ -82,7 +93,7 @@ async fn main() -> kvs::Result<()> {
                 .text()
                 .await
                 .with_whatever_context(|_| "Unable to read response from server");
-            println!("{}", resp?);
+            print!("{}", resp?);
         }
     }
 

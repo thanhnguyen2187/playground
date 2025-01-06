@@ -67,14 +67,21 @@ impl KvsEngine for SledStore {
         }
     }
 
-    fn remove(&mut self, key: String) -> Result<()> {
+    fn remove(&mut self, key: String) -> Result<Option<String>> {
         let Some(db) = self.db.as_ref() else {
             whatever!("Sled store not initialized");
         };
 
-        db.remove(key.clone())
+        let value_option = db
+            .remove(key.clone())
             .with_whatever_context(|_| format!("Couldn't remove key {} from sled store", key))?;
-
-        Ok(())
+        if let Some(value) = value_option {
+            let value = String::from_utf8(value.to_vec()).with_whatever_context(|_| {
+                format!("Couldn't convert value for key {} to UTF-8", key)
+            })?;
+            Ok(Some(value))
+        } else {
+            Ok(None)
+        }
     }
 }
