@@ -32,3 +32,9 @@ env_logger = "0.11.6"
 sled = "0.34.7"
 reqwest = "0.12.12"
 criterion = "0.5.1"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
+
+[[bench]]
+name = "kv_store"
+harness = false
