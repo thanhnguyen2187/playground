@@ -1,4 +1,5 @@
 use clap::Parser;
+use snafu::ResultExt;
 
 #[derive(Parser)]
 #[command(version)]
@@ -33,12 +34,18 @@ enum Commands {
     },
 }
 
-fn main() -> kvs::Result<()> {
+#[tokio::main]
+async fn main() -> kvs::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
         Commands::Get { key: _ } => {
-            unimplemented!()
+            let resp = reqwest::get(cli.addr).await.with_whatever_context(
+                |_| "Unable to connect to server",
+            )?.text().await.with_whatever_context(
+                |_| "Unable to read response from server",
+            );
+            println!("{}", resp?);
         }
         Commands::Set { key: _, value: _ } => {
             unimplemented!()
@@ -47,4 +54,6 @@ fn main() -> kvs::Result<()> {
             unimplemented!()
         }
     }
+
+    Ok(())
 }
