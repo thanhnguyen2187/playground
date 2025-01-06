@@ -14,10 +14,15 @@ use std::path::Path;
 use std::sync::{Arc, RwLock};
 use server::handlers;
 use server::app_state::AppState;
+use cli::parse_addr::parse_addr;
 
 mod server {
     pub mod app_state;
     pub mod handlers;
+}
+
+mod cli {
+    pub mod parse_addr;
 }
 
 
@@ -55,28 +60,6 @@ struct Cli {
     engine: Engine,
 }
 
-fn validate_addr(addr: &str) -> Result<()> {
-    match addr.parse::<SocketAddr>() {
-        Ok(_) => Ok(()),
-        Err(_) => whatever!(
-            "Invalid binding address; expected [ip-v4-host]:[port]; got {}",
-            addr,
-        ),
-    }
-}
-
-#[cfg(test)]
-mod validate_addr {
-    use super::*;
-
-    #[test]
-    fn all() {
-        assert!(validate_addr("127.0.0.1:4004").is_ok());
-        assert!(validate_addr("0.0.0.0:4004").is_ok());
-        assert!(validate_addr("").is_err());
-        assert!(validate_addr("abc.xyz").is_err());
-    }
-}
 
 /// Checks for the existence of other engines' database files. For example, if we are using
 /// `kvs`, then `sled` database file should not exist and vice versa.
@@ -109,7 +92,7 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
     // TODO: validate engine by Clap instead of hard-coding
-    validate_addr(&cli.addr)?;
+    parse_addr(&cli.addr)?;
     info!("Started server at: {:?}", cli.addr);
     info!("Chosen engine: {:?}", {
         match cli.engine {
