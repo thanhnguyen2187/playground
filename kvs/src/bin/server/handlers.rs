@@ -1,8 +1,9 @@
 use axum::extract::{Path, State};
-use kvs::{Result, AppState};
+use kvs::{Result};
 use log::{info, warn};
 use snafu::whatever;
 use std::ops::{Deref, DerefMut};
+use super::app_state::AppState;
 
 pub async fn get(State(state): State<AppState>, Path(key): Path<String>) -> Result<String> {
     if let Ok(state_lock) = state.store.read() {

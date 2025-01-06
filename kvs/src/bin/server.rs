@@ -2,7 +2,7 @@ use axum::routing::{get, post};
 use axum::Router;
 use clap::{Parser, ValueEnum};
 use env_logger::Env;
-use kvs::{AppState, KvStoreV2, KvsEngine, MemStore, Result, SledStore};
+use kvs::{KvStoreV2, KvsEngine, MemStore, Result, SledStore};
 use log::{error, info};
 use snafu::whatever;
 use std::cmp::PartialEq;
@@ -12,8 +12,14 @@ use std::fmt::Display;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
+use server::handlers;
+use server::app_state::AppState;
 
-mod handlers;
+mod server {
+    pub mod app_state;
+    pub mod handlers;
+}
+
 
 #[derive(ValueEnum, PartialEq, Eq, Hash, Default, Debug, Clone)]
 enum Engine {
