@@ -1,3 +1,4 @@
+use std::process::exit;
 use clap::Parser;
 use cli::parse_addr::parse_addr;
 use snafu::ResultExt;
@@ -82,6 +83,7 @@ async fn main() -> kvs::Result<()> {
                         .await
                         .with_whatever_context(|_| "Unable to read response from server")?
                 );
+                exit(1);
             }
         }
         Commands::Rm { key } => {
@@ -89,11 +91,21 @@ async fn main() -> kvs::Result<()> {
                 .post(format!("{}/v1/rm/{}", addr, key))
                 .send()
                 .await
-                .with_whatever_context(|_| "Unable to connect to server")?
-                .text()
-                .await
-                .with_whatever_context(|_| "Unable to read response from server");
-            print!("{}", resp?);
+                .with_whatever_context(|_| "Unable to connect to server")?;
+            if resp.status().is_success() {
+                let resp = resp
+                    .text()
+                    .await
+                    .with_whatever_context(|_| "Unable to read response from server")?;
+                print!("{}", resp);
+            } else {
+                let resp = resp
+                    .text()
+                    .await
+                    .with_whatever_context(|_| "Unable to read response from server")?;
+                eprint!("{}", resp);
+                exit(1);
+            }
         }
     }
 
