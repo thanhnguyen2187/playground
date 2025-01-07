@@ -21,7 +21,8 @@ impl KvsEngine for MemStore {
     }
 
     fn get(&self, key: String) -> Result<Option<String>> {
-        Ok(self.map.get(&key).cloned())
+        let map = &self.map;
+        Ok(map.get(&key).cloned())
     }
 
     fn remove(&mut self, key: String) -> Result<Option<String>> {
@@ -32,5 +33,9 @@ impl KvsEngine for MemStore {
             }
             None => Ok(None),
         }
+    }
+
+    fn name(&self) -> &'static str {
+        "MemStore"
     }
 }

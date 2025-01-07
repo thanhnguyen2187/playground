@@ -84,4 +84,8 @@ impl KvsEngine for SledStore {
             Ok(None)
         }
     }
+
+    fn name(&self) -> &'static str {
+        "SledStore"
+    }
 }

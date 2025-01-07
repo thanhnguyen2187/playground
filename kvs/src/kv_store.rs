@@ -194,6 +194,10 @@ impl KvsEngine for KvStoreV2 {
             None => Ok(None),
         }
     }
+
+    fn name(&self) -> &'static str {
+        "KvStore"
+    }
 }
 
 #[cfg(test)]
