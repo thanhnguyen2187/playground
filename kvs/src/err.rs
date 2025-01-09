@@ -39,6 +39,8 @@ pub enum Error {
         #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
         source: Option<Box<dyn std::error::Error>>,
     },
+
+    // IoError(std::io::Error),
 }
 
 impl IntoResponse for Error {

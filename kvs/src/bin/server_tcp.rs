@@ -1,29 +1,43 @@
+use clap::Parser;
+use cli::engine::{check_engine_db_file, Engine};
+use cli::parse_addr::parse_addr;
+use cli::server::Server;
 use env_logger::Env;
 use kvs::Result;
 use log::{error, info};
+use snafu::{ResultExt, Whatever};
 use std::env;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::net::{TcpListener, TcpStream};
-use clap::Parser;
-
-use cli::engine::{check_engine_db_file, Engine};
-use cli::server::Server;
-use cli::parse_addr::parse_addr;
 
 mod cli {
     pub mod engine;
-    pub mod server;
     pub mod parse_addr;
+    pub mod server;
 }
 
-fn handle_connection(stream: TcpStream) -> Vec<String> {
+/// Turns the incoming stream into readable words represented as a vector of
+/// strings.
+fn tokenize(stream: TcpStream) -> Result<Vec<String>> {
     let buf_reader = BufReader::new(&stream);
-    let http_request: Vec<String> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
-    http_request
+    let words = buf_reader
+        .split(b' ')
+        .map(|vec_result| {
+            let vec: Vec<u8> =
+                vec_result.with_whatever_context::<_, &str, kvs::Error>(|_| {
+                    "Failed to parse stream to vector"
+                })?;
+            let word: String = String::from_utf8(vec)
+                .with_whatever_context::<_, &str, kvs::Error>(|_| {
+                    "Failed to parse vector to UTF-8"
+                })?;
+
+            Ok::<String, kvs::Error>(word.trim().to_string())
+        })
+        .collect::<Vec<_>>()?;
+
+    Ok(words)
+    // unimplemented!()
 }
 
 fn response_connection(stream: TcpStream, response: Vec<String>) {
@@ -64,7 +78,7 @@ fn main() -> Result<()> {
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        let lines = handle_connection(stream.try_clone().unwrap());
+        let lines = tokenize(stream.try_clone().unwrap())?;
         println!("Received request: {:?}", lines);
         response_connection(stream, lines);
     }
