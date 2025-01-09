@@ -2,7 +2,6 @@ use crate::err::Result;
 use crate::KvsEngine;
 use sled;
 use snafu::{whatever, ResultExt};
-use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 
 pub const DEFAULT_FILE_NAME: &str = "sled.db";

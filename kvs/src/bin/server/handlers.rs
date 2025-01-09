@@ -61,5 +61,3 @@ pub async fn remove(
 pub async fn not_found() -> &'static str {
     "Not found"
 }
-
-pub fn main() {}

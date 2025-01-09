@@ -1,5 +1,5 @@
 use crate::engine::KvsEngine;
-use crate::err::{Error, Result, ResultExt};
+use crate::err::{Result, ResultExt};
 use serde::{Deserialize, Serialize};
 use snafu::whatever;
 use std::collections::HashMap;
@@ -8,7 +8,6 @@ use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, MutexGuard, RwLock};
 
 pub const DEFAULT_FILE_NAME: &str = "kvs.db";
 

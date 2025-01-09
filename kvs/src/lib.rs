@@ -1,5 +1,5 @@
 mod engine;
-mod err;
+pub mod err;
 mod kv_store;
 mod sled_store;
 mod mem_store;

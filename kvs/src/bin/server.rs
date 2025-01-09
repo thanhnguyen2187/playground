@@ -1,20 +1,16 @@
 use axum::routing::{get, post};
 use axum::Router;
-use clap::{Parser, ValueEnum};
+use clap::{Parser};
+use cli::engine::{check_engine_db_file, Engine};
+use cli::parse_addr::parse_addr;
+use cli::server::Server;
 use env_logger::Env;
 use kvs::{KvStoreV2, KvsEngine, MemStore, Result, SledStore};
 use log::{error, info};
-use snafu::whatever;
-use std::cmp::PartialEq;
-use std::collections::HashMap;
-use std::env;
-use std::fmt::Display;
-use std::net::SocketAddr;
-use std::path::Path;
-use std::sync::{Arc, RwLock};
-use server::handlers;
 use server::app_state::AppState;
-use cli::parse_addr::parse_addr;
+use server::handlers;
+use std::env;
+use std::sync::{Arc, RwLock};
 
 mod server {
     pub mod app_state;
@@ -23,65 +19,9 @@ mod server {
 
 mod cli {
     pub mod parse_addr;
-}
 
-
-#[derive(ValueEnum, PartialEq, Eq, Hash, Default, Debug, Clone)]
-enum Engine {
-    /// A custom key-value store
-    #[default]
-    Kvs,
-    /// A key-value store using sled
-    Sled,
-    /// A key-value store using in-memory
-    Mem,
-}
-
-impl Display for Engine {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Engine::Kvs => write!(f, "kvs"),
-            Engine::Sled => write!(f, "sled"),
-            Engine::Mem => write!(f, "in-memory"),
-        }
-    }
-}
-
-#[derive(Parser)]
-#[command(version)]
-#[command(propagate_version = true)]
-struct Cli {
-    /// The address of the server
-    #[arg(long, default_value_t = String::from("127.0.0.1:4004"))]
-    addr: String,
-
-    /// The underlying engine to use
-    #[arg(long, default_value_t)]
-    engine: Engine,
-}
-
-
-/// Checks for the existence of other engines' database files. For example, if we are using
-/// `kvs`, then `sled` database file should not exist and vice versa.
-fn check_engine_db_file(engine: &Engine) -> Result<()> {
-    let engine_db_files: HashMap<Engine, _> = HashMap::from([
-        (Engine::Kvs, Path::new(kvs::DEFAULT_FILE_NAME_KVS).exists()),
-        (
-            Engine::Sled,
-            Path::new(kvs::DEFAULT_FILE_NAME_SLED).exists(),
-        ),
-    ]);
-    for (engine_checking, db_file_exists) in engine_db_files {
-        if engine_checking != *engine && db_file_exists {
-            whatever!(
-                "Current engine is {} while database file for engine {} existed",
-                engine,
-                engine_checking,
-            );
-        }
-    }
-
-    Ok(())
+    pub mod engine;
+    pub mod server;
 }
 
 #[tokio::main]
@@ -90,7 +30,7 @@ async fn main() -> Result<()> {
     info!("Logger initialized!");
     info!("Current binary version: {:?}", env!("CARGO_PKG_VERSION"));
 
-    let cli = Cli::parse();
+    let cli = Server::parse();
     // TODO: validate engine by Clap instead of hard-coding
     parse_addr(&cli.addr)?;
     info!("Started server at: {:?}", cli.addr);
