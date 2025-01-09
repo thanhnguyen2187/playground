@@ -23,18 +23,16 @@ fn tokenize(stream: TcpStream) -> Result<Vec<String>> {
     let words = buf_reader
         .split(b' ')
         .map(|vec_result| {
-            let vec: Vec<u8> =
-                vec_result.with_whatever_context::<_, &str, kvs::Error>(|_| {
-                    "Failed to parse stream to vector"
-                })?;
+            let vec: Vec<u8> = vec_result.with_whatever_context::<_, &str, kvs::Error>(|_| {
+                "Failed to parse stream to vector"
+            })?;
             let word: String = String::from_utf8(vec)
                 .with_whatever_context::<_, &str, kvs::Error>(|_| {
                     "Failed to parse vector to UTF-8"
                 })?;
-
             Ok::<String, kvs::Error>(word.trim().to_string())
         })
-        .collect::<Vec<_>>()?;
+        .collect::<Result<Vec<String>>>()?;
 
     Ok(words)
     // unimplemented!()
