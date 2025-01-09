@@ -10,6 +10,10 @@ name = "kvs-server"
 path = "src/bin/server.rs"
 
 [[bin]]
+name = "kvs-server-tcp"
+path = "src/bin/server_tcp.rs"
+
+[[bin]]
 name = "kvs-client"
 path = "src/bin/client.rs"
 
