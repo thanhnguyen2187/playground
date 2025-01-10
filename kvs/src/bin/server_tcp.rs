@@ -3,11 +3,11 @@ use cli::engine::{check_engine_db_file, Engine};
 use cli::parse_addr::parse_addr;
 use cli::server::Server;
 use env_logger::Env;
-use kvs::Result;
+use kvs::{Command, Result};
 use log::{error, info};
 use snafu::{ResultExt, Whatever};
 use std::env;
-use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::io::{BufRead, BufReader, BufWriter, Cursor, Read, Write};
 use std::net::{TcpListener, TcpStream};
 
 mod cli {
@@ -18,8 +18,8 @@ mod cli {
 
 /// Turns the incoming stream into readable words represented as a vector of
 /// strings.
-fn tokenize(stream: TcpStream) -> Result<Vec<String>> {
-    let buf_reader = BufReader::new(&stream);
+fn tokenize<T: Read>(stream: T) -> Result<Vec<String>> {
+    let buf_reader = BufReader::new(stream);
     let words = buf_reader
         .split(b' ')
         .map(|vec_result| {
@@ -30,12 +30,59 @@ fn tokenize(stream: TcpStream) -> Result<Vec<String>> {
                 .with_whatever_context::<_, &str, kvs::Error>(|_| {
                     "Failed to parse u8 vector to UTF-8"
                 })?;
-            Ok::<String, kvs::Error>(word.trim().to_string())
+            Ok::<String, kvs::Error>(word.trim().to_owned())
         })
-        .collect::<Result<Vec<String>>>()?;
+        .collect::<Result<Vec<String>>>()?
+        .into_iter()
+        .filter(|word| !word.is_empty())
+        .collect();
 
     Ok(words)
-    // unimplemented!()
+}
+
+fn parse(words: Vec<String>) -> Result<Vec<Command>> {
+    unimplemented!()
+}
+
+#[cfg(test)]
+mod pure_fns {
+    use super::*;
+
+    mod tokenize {
+        use super::*;
+
+        #[test]
+        fn success() {
+            let test_table = vec![
+                (
+                    "word1 word2 word3",
+                    vec![
+                        "word1".to_string(),
+                        "word2".to_string(),
+                        "word3".to_string(),
+                    ],
+                ),
+                (
+                    "  word1   word2  word3    ",
+                    vec![
+                        "word1".to_string(),
+                        "word2".to_string(),
+                        "word3".to_string(),
+                    ],
+                ),
+                (
+                    "word1\nword2 word3",
+                    vec!["word1\nword2".to_string(), "word3".to_string()],
+                ),
+            ];
+
+            for (input, expected) in test_table {
+                let stream = Cursor::new(input.as_bytes());
+                let got = tokenize(stream).unwrap();
+                assert_eq!(got, expected);
+            }
+        }
+    }
 }
 
 fn response_connection(stream: TcpStream, response: Vec<String>) {
