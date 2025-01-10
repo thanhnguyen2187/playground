@@ -32,10 +32,11 @@ fn tokenize<T: Read>(stream: T) -> Result<Vec<String>> {
                 })?;
             Ok::<String, kvs::Error>(word.trim().to_owned())
         })
-        .collect::<Result<Vec<String>>>()?
-        .into_iter()
-        .filter(|word| !word.is_empty())
-        .collect();
+        .filter(|result| match result {
+            Ok(word) => !word.is_empty(),
+            Err(_) => true,
+        })
+        .collect::<Result<Vec<String>>>()?;
 
     Ok(words)
 }
