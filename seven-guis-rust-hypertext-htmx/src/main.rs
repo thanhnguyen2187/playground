@@ -1,4 +1,5 @@
 mod handlers;
+mod templates;
 
 use std::env;
 use axum::{routing::get, Router};
@@ -10,10 +11,10 @@ async fn main() {
     info!("Logger initialized!");
     info!("Logger level: {}", env::var("RUST_LOG").unwrap_or("debug".to_string()));
 
-    let app = Router::new().route("/", get(|| async {
-        info!("Hello, world!");
-        "Hello, world!"
-    })).fallback(handlers::default_fallback);
+    let app = Router::new()
+        .route("/hello-world", get(handlers::hello_world))
+        .route("/", get(handlers::index))
+        .fallback(handlers::default_fallback);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
