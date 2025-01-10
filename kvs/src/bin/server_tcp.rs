@@ -3,12 +3,15 @@ use cli::engine::{check_engine_db_file, Engine};
 use cli::parse_addr::parse_addr;
 use cli::server::Server;
 use env_logger::Env;
-use kvs::{Command, Result};
-use log::{error, info};
+use kvs::{
+    evaluate_command, Command, CommandResponse, KvStoreV2, KvsEngine, MemStore, Result, SledStore,
+};
+use log::{error, info, warn};
 use snafu::{whatever, ResultExt, Whatever};
 use std::env;
 use std::io::{BufRead, BufReader, BufWriter, Cursor, Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::ops::DerefMut;
 
 mod cli {
     pub mod engine;
@@ -57,8 +60,31 @@ fn parse(words: Vec<String>) -> Result<Command> {
     }
 }
 
+fn respond<T: Write>(stream: &mut T, command_response: CommandResponse) -> Result<()> {
+    match command_response {
+        CommandResponse::Get { value } => {
+            let mut buf_writer = BufWriter::new(stream);
+            let output = value.unwrap_or("Key not found".to_string());
+            buf_writer
+                .write(output.as_bytes())
+                .with_whatever_context(|e| "Error happened writing to stream")?;
+        }
+        CommandResponse::Set {} => {}
+        CommandResponse::Rm { value } => {
+            if value.is_none() {
+                let mut buf_writer = BufWriter::new(stream);
+                buf_writer.write("Key not found".as_bytes()).unwrap();
+            }
+        }
+    }
+    // stream.flush().with_whatever_context(
+    //     |e| "Error happened flushing stream"
+    // )?;
+    Ok(())
+}
+
 #[cfg(test)]
-mod pure_fns {
+mod tests {
     use super::*;
 
     mod tokenize {
@@ -138,13 +164,22 @@ mod pure_fns {
             }
         }
     }
-}
 
-fn response_connection(stream: TcpStream, response: Vec<String>) {
-    let mut buf_writer = BufWriter::new(&stream);
-    for line in response {
-        buf_writer.write(line.as_bytes()).unwrap();
-        buf_writer.write(b"\n").unwrap();
+    mod respond {
+        use super::*;
+
+        #[test]
+        fn success() {
+            let command_response = CommandResponse::Get {
+                value: Some("value1".to_string()),
+            };
+            let mut stream = Cursor::new(Vec::new());
+
+            respond(&mut stream, command_response).unwrap();
+            let got = String::from_utf8(stream.into_inner()).unwrap();
+
+            assert_eq!(got, "value1")
+        }
     }
 }
 
@@ -173,14 +208,26 @@ fn main() -> Result<()> {
         return Err(err);
     }
 
-    // let current_dir = env::current_dir().unwrap();
-    let listener = TcpListener::bind(cli.addr).unwrap();
+    let current_dir = env::current_dir().unwrap();
+    let mut store: Box<dyn KvsEngine> = match cli.engine {
+        Engine::Kvs => Box::new(KvStoreV2::open(current_dir.as_path())?),
+        Engine::Sled => Box::new(SledStore::open(current_dir.as_path())?),
+        Engine::Mem => Box::new(MemStore::new()),
+    };
 
+    let listener = TcpListener::bind(cli.addr).unwrap();
     for stream in listener.incoming() {
-        let stream = stream.unwrap();
-        let lines = tokenize(stream.try_clone().unwrap())?;
-        println!("Received request: {:?}", lines);
-        response_connection(stream, lines);
+        let mut stream = stream.with_whatever_context(|err| {
+            format!("Failed to accept incoming connection: {}", err)
+        })?;
+        let words = tokenize(&stream)?;
+        info!("Received words: {:?}", words);
+        let command = parse(words)?;
+        info!("Parsed command: {:?}", command);
+        let command_response = evaluate_command(&command, store.deref_mut())?;
+        info!("Response: {:?}", command_response);
+        respond(&mut stream, command_response)?;
+        info!("Sent response");
     }
 
     Ok(())

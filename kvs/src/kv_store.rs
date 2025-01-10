@@ -31,6 +31,14 @@ pub enum Command {
     Rm { key: String },
 }
 
+// TODO: move `Command` and `CommandResponse` to a more correct place
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum CommandResponse {
+    Get { value: Option<String> },
+    Set,
+    Rm { value: Option<String> },
+}
+
 pub fn deserialize_commands(text: &String) -> Result<Vec<Command>> {
     let lines = text.trim().lines();
     let mut commands = Vec::new();
