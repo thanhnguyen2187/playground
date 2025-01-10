@@ -67,19 +67,18 @@ fn respond<T: Write>(stream: &mut T, command_response: CommandResponse) -> Resul
             let output = value.unwrap_or("Key not found".to_string());
             buf_writer
                 .write(output.as_bytes())
-                .with_whatever_context(|e| "Error happened writing to stream")?;
+                .with_whatever_context(|e| format!("Error happened writing to stream {}", e))?;
         }
         CommandResponse::Set {} => {}
         CommandResponse::Rm { value } => {
             if value.is_none() {
                 let mut buf_writer = BufWriter::new(stream);
-                buf_writer.write("Key not found".as_bytes()).unwrap();
+                buf_writer
+                    .write("Key not found".as_bytes())
+                    .with_whatever_context(|e| format!("Error happened writing to stream {}", e))?;
             }
         }
     }
-    // stream.flush().with_whatever_context(
-    //     |e| "Error happened flushing stream"
-    // )?;
     Ok(())
 }
 
