@@ -5,7 +5,7 @@ use cli::server::Server;
 use env_logger::Env;
 use kvs::{Command, Result};
 use log::{error, info};
-use snafu::{ResultExt, Whatever};
+use snafu::{whatever, ResultExt, Whatever};
 use std::env;
 use std::io::{BufRead, BufReader, BufWriter, Cursor, Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -41,8 +41,20 @@ fn tokenize<T: Read>(stream: T) -> Result<Vec<String>> {
     Ok(words)
 }
 
-fn parse(words: Vec<String>) -> Result<Vec<Command>> {
-    unimplemented!()
+fn parse(words: Vec<String>) -> Result<Command> {
+    match &words[..] {
+        [command_str, key] if command_str.to_uppercase() == "GET" => {
+            Ok(Command::Get { key: key.clone() })
+        }
+        [command_str, key, value] if command_str.to_uppercase() == "SET" => Ok(Command::Set {
+            key: key.clone(),
+            value: value.clone(),
+        }),
+        [command_str, key] if command_str.to_uppercase() == "RM" => {
+            Ok(Command::Rm { key: key.clone() })
+        }
+        _ => whatever!("Invalid command"),
+    }
 }
 
 #[cfg(test)]
@@ -80,6 +92,48 @@ mod pure_fns {
             for (input, expected) in test_table {
                 let stream = Cursor::new(input.as_bytes());
                 let got = tokenize(stream).unwrap();
+                assert_eq!(got, expected);
+            }
+        }
+    }
+
+    mod parse {
+        use super::*;
+
+        #[test]
+        fn success() {
+            let test_table = vec![
+                (
+                    "GET key1".to_string(),
+                    Command::Get {
+                        key: "key1".to_string(),
+                    },
+                ),
+                (
+                    "SET key1 value1".to_string(),
+                    Command::Set {
+                        key: "key1".to_string(),
+                        value: "value1".to_string(),
+                    },
+                ),
+                (
+                    "RM key1".to_string(),
+                    Command::Rm {
+                        key: "key1".to_string(),
+                    },
+                ),
+                (
+                    "   GET   spaced-key-command    ".to_string(),
+                    Command::Get {
+                        key: "spaced-key-command".to_string(),
+                    },
+                ),
+            ];
+
+            for (input, expected) in test_table {
+                let input_stream = Cursor::new(input.as_bytes());
+                let words = tokenize(input_stream).unwrap();
+                let got = parse(words).unwrap();
                 assert_eq!(got, expected);
             }
         }
