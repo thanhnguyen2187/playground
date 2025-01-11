@@ -12,6 +12,7 @@ fn header(page_title: &str) -> Markup {
             title { (page_title) };
             link rel="stylesheet" type="text/css" href="https://matcha.mizu.sh/matcha.css";
             script src="https://unpkg.com/htmx.org@2.0.4" {""};
+            script src="https://unpkg.com/alpinejs@3.14.8" {""};
         }
     }
 }
@@ -61,6 +62,19 @@ pub async fn page_counter(
             h1 { "Counter" }
 
             (data)
+
+            form x-data="{ count: 0 }" {
+                fieldset {
+                    label {
+                        "Value: "
+                        input x-model="count";
+                    }
+                    button
+                        type="button"
+                        x-on:click="count++"
+                        { "Increment" };
+                }
+            }
 
             a href="/" { "Back" }
         }
