@@ -16,6 +16,12 @@ fn header(page_title: &str) -> Markup {
     }
 }
 
+fn home_back_link() -> Markup {
+    html! {
+        a href="/" { "Back" }
+    }
+}
+
 pub async fn page_index() -> Markup {
     html! {
         (header("Seven GUIs in Rust"))
@@ -39,7 +45,7 @@ pub async fn page_unimplemented() -> Markup {
         body {
             h1 { "Unimplemented" }
             p { "Please check again later" }
-            a href="/" { "Back" }
+            (home_back_link())
         }
     }
 }
@@ -74,8 +80,7 @@ pub async fn page_counter(
                         { "Increment" };
                 }
             }
-
-            a href="/" { "Back" }
+            (home_back_link())
         }
     }
 }
@@ -140,6 +145,7 @@ pub async fn page_temperature_converter() -> Markup {
                     }
                 }
             }
+            (home_back_link())
         }
     }
 }
