@@ -70,14 +70,19 @@ pub async fn page_counter(
 pub fn counter_component(app_state: &AppState) -> Markup {
     html! {
         form #counter {
-            input type="number" value=(app_state.counter) name="counter";
-            button
-                type="submit"
-                hx-post="/counter-increase"
-                hx-target="#counter"
-                hx-swap="outerHTML"
-                hx-trigger="click"
-                { "Increment" };
+            fieldset {
+                label {
+                    "Value: "
+                    input type="number" value=(app_state.counter) name="counter";
+                }
+                button
+                    type="submit"
+                    hx-post="/counter-increase"
+                    hx-target="#counter"
+                    hx-swap="outerHTML"
+                    hx-trigger="click"
+                    { "Increment" };
+            }
         }
     }
 }
