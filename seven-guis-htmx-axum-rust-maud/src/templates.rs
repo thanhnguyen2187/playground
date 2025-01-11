@@ -1,4 +1,3 @@
-use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 use axum::extract::State;
 use maud::{html, DOCTYPE, Markup};
@@ -24,7 +23,7 @@ pub async fn page_index() -> Markup {
             h1 { "Seven GUIs in Rust" }
             ul {
                 li { a href="/counter" { "Counter" } }
-                li { a href="/temperature-converter" { "Temperature Converter (Unimplemented)" } }
+                li { a href="/temperature-converter" { "Temperature Converter" } }
                 li { a href="/flight-booker" { "Flight Booker (Unimplemented)" } }
                 li { a href="/timer" { "Timer (Unimplemented)" } }
                 li { a href="/crud" { "CRUD (Unimplemented)" } }
@@ -116,18 +115,31 @@ pub async fn page_counter_increase(
     data
 }
 
-// pub async fn page_counter_component(
-//     State(mut app_state): State<Arc<Mutex<AppState>>>,
-// ) -> Markup {
-//     app_state.deref_mut().counter += 1;
-//     html! {
-//         input type="number" value=(app_state.counter) name="counter";
-//         button
-//             type="submit"
-//             hx-get="/counter-component"
-//             hx-target="#counter"
-//             hx-swap="outerHTML"
-//             hx-trigger="click"
-//             { "Increment" };
-//     }
-// }
+pub async fn page_temperature_converter() -> Markup {
+    html! {
+        (header("Temperature Converter"))
+        body {
+            h1 { "Temperature Converter" }
+            form x-data="{ celsius: 0, fahrenheit: 32 }" {
+                fieldset {
+                    label {
+                        "Celsius: "
+                        input
+                            x-model="celsius"
+                            "@keyup"="fahrenheit = (celsius * (9 / 5)) + 32"
+                            type="number"
+                            name="celsius";
+                    }
+                    label {
+                        "Fahrenheit: "
+                        input
+                            x-model="fahrenheit"
+                            "@keyup"="celsius = (fahrenheit - 32) * (5 / 9)"
+                            type="number"
+                            name="fahrenheit";
+                    }
+                }
+            }
+        }
+    }
+}

@@ -5,7 +5,6 @@ use std::env;
 use std::sync::{Arc, Mutex};
 use axum::{routing::get, Router};
 use axum::routing::post;
-use maud::Markup;
 use log::info;
 
 pub struct AppState {
@@ -22,7 +21,7 @@ async fn main() {
         .route("/", get(templates::page_index))
         .route("/counter", get(templates::page_counter))
         .route("/counter-increase", post(templates::page_counter_increase))
-        .route("/temperature-converter", get(templates::page_unimplemented))
+        .route("/temperature-converter", get(templates::page_temperature_converter))
         .route("/flight-booker", get(templates::page_unimplemented))
         .route("/timer", get(templates::page_unimplemented))
         .route("/crud", get(templates::page_unimplemented))
