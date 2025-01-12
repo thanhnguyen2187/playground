@@ -642,6 +642,7 @@ dependencies = [
  "env_logger",
  "log",
  "maud",
+ "serde",
  "tokio",
 ]
 

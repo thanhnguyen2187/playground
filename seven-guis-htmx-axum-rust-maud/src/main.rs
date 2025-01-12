@@ -9,9 +9,11 @@ use std::sync::{Arc, Mutex};
 use axum::{routing::get, Router};
 use axum::routing::post;
 use log::info;
+use crate::flight_booker::{FlightBookerState, OneWayFlight};
 
 pub struct AppState {
     counter: i32,
+    flight_booker_state: FlightBookerState,
 }
 
 #[tokio::main]
@@ -26,12 +28,21 @@ async fn main() {
         .route("/counter-increase", post(counter::page_increase))
         .route("/temperature-converter", get(temperature_converter::page))
         .route("/flight-booker", get(flight_booker::page))
+        .route("/flight-booker-component", post(flight_booker::page_component))
         .route("/timer", get(index::page_unimplemented))
         .route("/crud", get(index::page_unimplemented))
         .route("/circle-drawer", get(index::page_unimplemented))
         .route("/hello-world", get(index::page_unimplemented))
         .fallback(handlers::default_fallback)
-        .with_state(Arc::new(Mutex::new(AppState { counter: 0 })));
+        .with_state(Arc::new(Mutex::new(AppState {
+            counter: 0,
+            flight_booker_state:
+            FlightBookerState::OneWay(
+                OneWayFlight {
+                    from: None,
+                }
+            ),
+        })));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
