@@ -1,6 +1,6 @@
 use maud::{html, Markup, DOCTYPE};
 
-fn header(page_title: &str) -> Markup {
+pub fn header(page_title: &str) -> Markup {
     html! {
         head {
             (DOCTYPE)
@@ -13,7 +13,7 @@ fn header(page_title: &str) -> Markup {
     }
 }
 
-fn home_back_link() -> Markup {
+pub fn home_back_link() -> Markup {
     html! {
         a href="/" { "Back" }
     }

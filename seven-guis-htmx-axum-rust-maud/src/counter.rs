@@ -1,7 +1,8 @@
 use axum::extract::State;
 use std::sync::{Arc, Mutex};
-use maud::Markup;
-use crate::{index, AppState};
+use maud::{html, Markup};
+use crate::AppState;
+use crate::index::{header, home_back_link};
 
 pub async fn page(
     State(app_state_arc): State<Arc<Mutex<AppState>>>,

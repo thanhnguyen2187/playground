@@ -1,4 +1,5 @@
-use maud::Markup;
+use maud::{html, Markup};
+use crate::index::{header, home_back_link};
 
 pub async fn page() -> Markup {
     html! {
