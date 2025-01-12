@@ -1,5 +1,8 @@
 mod handlers;
-mod templates;
+mod index;
+mod counter;
+mod temperature_converter;
+mod flight_booker;
 
 use std::env;
 use std::sync::{Arc, Mutex};
@@ -18,15 +21,15 @@ async fn main() {
     info!("Logger level: {}", env::var("RUST_LOG").unwrap_or("debug".to_string()));
 
     let app = Router::new()
-        .route("/", get(templates::page_index))
-        .route("/counter", get(templates::page_counter))
-        .route("/counter-increase", post(templates::page_counter_increase))
-        .route("/temperature-converter", get(templates::page_temperature_converter))
-        .route("/flight-booker", get(templates::page_unimplemented))
-        .route("/timer", get(templates::page_unimplemented))
-        .route("/crud", get(templates::page_unimplemented))
-        .route("/circle-drawer", get(templates::page_unimplemented))
-        .route("/hello-world", get(templates::page_unimplemented))
+        .route("/", get(index::page))
+        .route("/counter", get(counter::page))
+        .route("/counter-increase", post(counter::page_increase))
+        .route("/temperature-converter", get(temperature_converter::page))
+        .route("/flight-booker", get(flight_booker::page))
+        .route("/timer", get(index::page_unimplemented))
+        .route("/crud", get(index::page_unimplemented))
+        .route("/circle-drawer", get(index::page_unimplemented))
+        .route("/hello-world", get(index::page_unimplemented))
         .fallback(handlers::default_fallback)
         .with_state(Arc::new(Mutex::new(AppState { counter: 0 })));
 
