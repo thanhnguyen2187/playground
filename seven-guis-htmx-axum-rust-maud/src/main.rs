@@ -11,6 +11,7 @@ use axum::routing::post;
 use log::info;
 use crate::flight_booker::{FlightBookerState, OneWayFlight};
 
+#[derive(Debug)]
 pub struct AppState {
     counter: i32,
     flight_booker_state: FlightBookerState,
@@ -29,6 +30,7 @@ async fn main() {
         .route("/temperature-converter", get(temperature_converter::page))
         .route("/flight-booker", get(flight_booker::page))
         .route("/flight-booker-component", post(flight_booker::page_component))
+        .route("/flight-booker-reset", post(flight_booker::page_reset))
         .route("/timer", get(index::page_unimplemented))
         .route("/crud", get(index::page_unimplemented))
         .route("/circle-drawer", get(index::page_unimplemented))

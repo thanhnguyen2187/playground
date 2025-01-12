@@ -1,21 +1,24 @@
 use std::sync::{Arc, Mutex};
 use axum::extract::State;
 use axum::Form;
-use log::info;
+use log::{debug, info, warn};
 use maud::{html, Markup};
 use serde::Deserialize;
 use crate::AppState;
 use crate::index::{header, home_back_link};
 
+#[derive(Debug)]
 pub struct OneWayFlight {
     pub from: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct ReturnFlight {
     pub from: Option<String>,
     pub to: Option<String>,
 }
 
+#[derive(Debug)]
 pub enum FlightBookerState {
     OneWay(OneWayFlight),
     Return(ReturnFlight),
@@ -55,10 +58,32 @@ pub fn calculate_from_class(state: &FlightBookerState) -> &'static str {
     ""
 }
 
+pub fn calculate_flight_type(state: &FlightBookerState) -> &'static str {
+    match state {
+        FlightBookerState::OneWay(_) => "one-way",
+        FlightBookerState::Return(_) => "return",
+    }
+}
+
+pub fn calculate_to_class(state: &FlightBookerState) -> &'static str {
+    let to_opt = match state {
+        FlightBookerState::OneWay(_) => None,
+        FlightBookerState::Return(ReturnFlight { from: _, to }) => to.clone(),
+    };
+
+    if let Some(to) = to_opt {
+        if !validate_date(&to) {
+            return "fg-danger";
+        }
+    }
+
+    ""
+}
+
 pub fn calculate_to_disabled(state: &FlightBookerState) -> &'static str {
     match state {
-        FlightBookerState::OneWay(_) => "true",
-        FlightBookerState::Return(_) => "false",
+        FlightBookerState::OneWay(_) => "false",
+        FlightBookerState::Return(_) => "true",
     }
 }
 
@@ -88,15 +113,37 @@ pub fn calculate_book_disabled(state: &FlightBookerState) -> &'static str {
     }
 }
 
+pub fn options(state: &FlightBookerState) -> Markup {
+    match state {
+        FlightBookerState::OneWay(_) => {
+            html! {
+                option value="one-way" selected="selected" { "One Way" }
+                option value="return" { "Return" }
+            }
+        }
+        FlightBookerState::Return(_) => {
+            html! {
+                option value="one-way" { "One Way" }
+                option value="return" selected="selected" { "Return" }
+            }
+        }
+    }
+}
+
 pub fn component(state: &FlightBookerState) -> Markup {
     html! {
         form #flight-booker {
             fieldset {
                 label {
                     "Type: "
-                    select name="flight-type" {
-                        option value="one-way" { "One Way" }
-                        option value="return" { "Return" }
+                    select
+                        name="flight-type"
+                        hx-trigger="change"
+                        hx-target="#flight-booker"
+                        hx-swap="outerHTML"
+                        hx-post="/flight-booker-component"
+                    {
+                        (options(state))
                     }
                 }
                 label {
@@ -112,6 +159,7 @@ pub fn component(state: &FlightBookerState) -> Markup {
                     input
                         type="text"
                         name="to"
+                        class={ (calculate_to_class(state)) }
                         disabled={ (calculate_to_disabled(state)) }
                     ;
                 }
@@ -121,6 +169,12 @@ pub fn component(state: &FlightBookerState) -> Markup {
                     hx-target="#flight-booker"
                     hx-swap="outerHTML"
                     { "Book" };
+                button
+                    type="button"
+                    hx-post="/flight-booker-reset"
+                    hx-target="#flight-booker"
+                    hx-swap="outerHTML"
+                    { "Reset" };
             }
         }
     }
@@ -134,12 +188,49 @@ pub struct FormData {
     to: Option<String>,
 }
 
+fn empty_string_to_none(string_opt: Option<String>) -> Option<String> {
+    if Some(String::new()) == string_opt {
+        None
+    } else {
+        string_opt
+    }
+}
+
+pub fn mutate_state(state: &mut FlightBookerState, form_data: FormData) {
+    match form_data.flight_type {
+        Some(ref flight_type) if flight_type == "one-way" => {
+            *state = FlightBookerState::OneWay(OneWayFlight {
+                from: empty_string_to_none(form_data.from),
+            });
+        }
+        Some(ref flight_type) if flight_type == "return" => {
+            *state = FlightBookerState::Return(ReturnFlight {
+                from: empty_string_to_none(form_data.from),
+                to: empty_string_to_none(form_data.to),
+            });
+        }
+        _ => {
+            *state = FlightBookerState::OneWay(OneWayFlight {
+                from: None,
+            });
+        }
+    }
+    debug!("State after mutation: {:?}", state);
+}
+
+pub fn reset_state(state: &mut FlightBookerState) {
+    *state = FlightBookerState::OneWay(OneWayFlight {
+        from: None,
+    });
+}
+
 pub async fn page_component(
     State(app_state_arc): State<Arc<Mutex<AppState>>>,
     Form(form_data): Form<FormData>,
 ) -> Markup {
-    info!("Form data: {:?}", form_data);
-    if let Ok(app_state) = app_state_arc.lock() {
+    debug!("Form data: {:?}", form_data);
+    if let Ok(mut app_state) = app_state_arc.lock() {
+        mutate_state(&mut app_state.flight_booker_state, form_data);
         component(&app_state.flight_booker_state)
     } else {
         html! {
@@ -165,6 +256,19 @@ pub async fn page(
             h1 { "Flight Booker" }
             { (data) }
             (home_back_link())
+        }
+    }
+}
+
+pub async fn page_reset(
+    State(app_state_arc): State<Arc<Mutex<AppState>>>,
+) -> Markup {
+    if let Ok(mut app_state) = app_state_arc.lock() {
+        reset_state(&mut app_state.flight_booker_state);
+        component(&app_state.flight_booker_state)
+    } else {
+        html! {
+            "Unable to get app state"
         }
     }
 }
