@@ -137,7 +137,6 @@ pub fn to_input(state: &FlightBookerState) -> Markup {
                 input
                     type="text"
                     name="to"
-                    class={ (calculate_to_class(state)) }
                     disabled="disabled"
                 ;
             }
@@ -178,27 +177,93 @@ pub fn from_input(state: &FlightBookerState) -> Markup {
 
 pub fn component(state: &FlightBookerState) -> Markup {
     html! {
-        form #flight-booker {
+        form #flight-booker x-data="{
+            flightType: 'one-way',
+
+            from: '',
+            fromTouched: false,
+            fromMessage: '',
+
+            to: '',
+            toTouched: false,
+            toMessage: '',
+
+            isValidDate(date) {
+                const parts = date.split('.');
+                if (parts.length !== 3) {
+                    return false;
+                }
+
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10);
+                const year = parseInt(parts[2], 10);
+
+                if (isNaN(day) || isNaN(month) || isNaN(year)) {
+                    return false;
+                }
+                if (day < 1 || day > 31) {
+                    return false;
+                }
+                if (month < 1 || month > 12) {
+                    return false;
+                }
+                if (year < 1900 || year > 2100) {
+                    return false;
+                }
+
+                return true;
+            },
+        }" {
             fieldset {
                 label {
                     "Type: "
                     select
                         name="flight-type"
-                        hx-trigger="change"
-                        hx-target="#flight-booker"
-                        hx-swap="outerHTML"
-                        hx-post="/flight-booker-component"
+                        x-model="flightType"
                     {
-                        (options(state))
+                        option value="one-way" { "One Way" }
+                        option value="return" { "Return" }
                     }
                 }
                 label {
                     "From: "
-                    (from_input(state))
+                    input
+                        type="text"
+                        name="from"
+                        x-model="from"
+                        "@blur"="
+                            fromTouched = true;
+                            if (from === '') {
+                                fromMessage = 'Date must not be empty';
+                            } else if (!isValidDate(from)) {
+                                fromMessage = 'Expected format: DD.MM.YYYY';
+                            } else {
+                                fromMessage = '';
+                            }
+                        "
+                        ":class"="(fromTouched && !isValidDate(from)) ? 'fg-danger' : ''"
+                    ;
+                    span .smaller x-text="fromMessage";
                 }
-                label {
+                label x-show="flightType === 'return'" {
                     "To: "
-                    (to_input(state))
+                    input
+                        type="text"
+                        name="to"
+                        x-model="to"
+                        "@blur"="
+                            toTouched = true;
+                            if (to === '') {
+                                toMessage = 'Date must not be empty';
+                            } else if (!isValidDate(to)) {
+                                toMessage = 'Expected format: DD.MM.YYYY';
+                            } else {
+                                toMessage = '';
+                            }
+                        "
+                        ":class"="(toTouched && !isValidDate(to)) ? 'fg-danger' : ''"
+                    ;
+                    span .smaller x-text="toMessage";
                 }
                 button
                     type="submit"

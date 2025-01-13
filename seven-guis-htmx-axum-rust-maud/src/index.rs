@@ -8,7 +8,7 @@ pub fn header(page_title: &str) -> Markup {
             title { (page_title) };
             link rel="stylesheet" type="text/css" href="https://matcha.mizu.sh/matcha.css";
             script src="https://unpkg.com/htmx.org@2.0.4" {""};
-            script src="https://unpkg.com/alpinejs@3.14.8" {""};
+            script defer src="https://unpkg.com/alpinejs@3.14.8" {""};
         }
     }
 }
