@@ -82,8 +82,8 @@ pub fn calculate_to_class(state: &FlightBookerState) -> &'static str {
 
 pub fn calculate_to_disabled(state: &FlightBookerState) -> &'static str {
     match state {
-        FlightBookerState::OneWay(_) => "false",
-        FlightBookerState::Return(_) => "true",
+        FlightBookerState::OneWay(_) => "",
+        FlightBookerState::Return(_) => "disabled",
     }
 }
 
@@ -130,6 +130,52 @@ pub fn options(state: &FlightBookerState) -> Markup {
     }
 }
 
+pub fn to_input(state: &FlightBookerState) -> Markup {
+    match state {
+        FlightBookerState::OneWay(_) => {
+            html! {
+                input
+                    type="text"
+                    name="to"
+                    class={ (calculate_to_class(state)) }
+                    disabled="disabled"
+                ;
+            }
+        }
+        FlightBookerState::Return(ReturnFlight { from: _, to: to_opt }) => {
+            let to = to_opt.clone().unwrap_or(String::new());
+            html! {
+                input
+                    type="text"
+                    name="to"
+                    class={ (calculate_to_class(state)) }
+                    value={ (to) }
+                ;
+            }
+        }
+    }
+}
+
+pub fn from_input(state: &FlightBookerState) -> Markup {
+    let from_opt = match state {
+        FlightBookerState::OneWay(OneWayFlight { from: from_opt }) => {
+            from_opt.clone()
+        }
+        FlightBookerState::Return(ReturnFlight { from: from_opt, to: _ }) => {
+            from_opt.clone()
+        }
+    };
+    let from = from_opt.unwrap_or(String::new());
+    html! {
+        input
+            type="text"
+            name="from"
+            class={ (calculate_from_class(state)) }
+            value={ (from) }
+        ;
+    }
+}
+
 pub fn component(state: &FlightBookerState) -> Markup {
     html! {
         form #flight-booker {
@@ -148,20 +194,11 @@ pub fn component(state: &FlightBookerState) -> Markup {
                 }
                 label {
                     "From: "
-                    input
-                        type="text"
-                        name="from"
-                        class={ (calculate_from_class(state)) }
-                    ;
+                    (from_input(state))
                 }
                 label {
                     "To: "
-                    input
-                        type="text"
-                        name="to"
-                        class={ (calculate_to_class(state)) }
-                        disabled={ (calculate_to_disabled(state)) }
-                    ;
+                    (to_input(state))
                 }
                 button
                     type="submit"
