@@ -1,11 +1,9 @@
-use criterion::BatchSize::{LargeInput, NumIterations, SmallInput};
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use kvs::{KvStoreV2, KvsEngine, MemStore, SledStore};
 use rand::{
     distributions::{Alphanumeric, DistString},
     Rng, SeedableRng,
 };
-use std::fs::{create_dir, remove_dir_all};
 use tempfile;
 
 /// Generate `n` strings of length between 1 and `m`, using a specified `seed`.
