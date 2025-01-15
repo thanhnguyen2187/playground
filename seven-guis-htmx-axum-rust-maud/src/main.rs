@@ -4,6 +4,7 @@ mod counter;
 mod temperature_converter;
 mod flight_booker;
 mod timer;
+mod crud;
 
 use std::env;
 use std::sync::{Arc, Mutex};
@@ -30,7 +31,7 @@ pub async fn page() -> Markup {
                 li { a href="/temperature-converter" { "Temperature Converter" } }
                 li { a href="/flight-booker" { "Flight Booker" } }
                 li { a href="/timer" { "Timer" } }
-                li { a href="/crud" { "CRUD (Unimplemented)" } }
+                li { a href="/crud" { "CRUD" } }
                 li { a href="/circle-drawer" { "Circle Drawer (Unimplemented)" } }
             }
         }
@@ -51,7 +52,7 @@ async fn main() {
         .route("/flight-booker", get(flight_booker::page))
         .route("/flight-booker-submit", post(flight_booker::page_submit))
         .route("/timer", get(timer::page))
-        .route("/crud", get(common::page_unimplemented))
+        .route("/crud", get(crud::page))
         .route("/circle-drawer", get(common::page_unimplemented))
         .route("/hello-world", get(common::page_unimplemented))
         .fallback(handlers::default_fallback)
