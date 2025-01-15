@@ -32,7 +32,6 @@ pub async fn page() -> Markup {
                             }
                         }, 100);
                     },
-
                 }"
                 x-init="
                     start();
@@ -49,7 +48,7 @@ pub async fn page() -> Markup {
                     label
                         .smaller
                         x-text="elapsed + ' ms / ' + duration + ' ms'"
-                    {""};
+                        {""};
                     label {
                         "Duration: "
                         input
