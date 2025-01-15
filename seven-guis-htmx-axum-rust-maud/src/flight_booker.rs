@@ -43,136 +43,33 @@ pub fn validate_date(date: &String) -> bool {
     }
 }
 
-pub fn calculate_from_class(state: &FlightBookerState) -> &'static str {
-    let from_opt = match state {
-        FlightBookerState::OneWay(OneWayFlight { from }) => from,
-        FlightBookerState::Return(ReturnFlight { from, to: _ }) => from,
-    };
+pub fn validate_range(from: &String, to: &String) -> bool {
+    if !validate_date(from) {
+        return false;
+    }
+    if !validate_date(to) {
+        return false;
+    }
+    let from_parts = from.split('.').collect::<Vec<&str>>();
+    let to_parts = to.split('.').collect::<Vec<&str>>();
+    let from_day = from_parts[0].parse::<u32>().unwrap_or(0);
+    let from_month = from_parts[1].parse::<u32>().unwrap_or(0);
+    let from_year = from_parts[2].parse::<u32>().unwrap_or(0);
+    let to_day = to_parts[0].parse::<u32>().unwrap_or(0);
+    let to_month = to_parts[1].parse::<u32>().unwrap_or(0);
+    let to_year = to_parts[2].parse::<u32>().unwrap_or(0);
 
-    if let Some(from) = from_opt {
-        if !validate_date(&from) {
-            return "fg-danger";
-        }
+    if from_day > to_day {
+        return false;
+    }
+    if from_month > to_month {
+        return false;
+    }
+    if from_year > to_year {
+        return false;
     }
 
-    ""
-}
-
-pub fn calculate_flight_type(state: &FlightBookerState) -> &'static str {
-    match state {
-        FlightBookerState::OneWay(_) => "one-way",
-        FlightBookerState::Return(_) => "return",
-    }
-}
-
-pub fn calculate_to_class(state: &FlightBookerState) -> &'static str {
-    let to_opt = match state {
-        FlightBookerState::OneWay(_) => None,
-        FlightBookerState::Return(ReturnFlight { from: _, to }) => to.clone(),
-    };
-
-    if let Some(to) = to_opt {
-        if !validate_date(&to) {
-            return "fg-danger";
-        }
-    }
-
-    ""
-}
-
-pub fn calculate_to_disabled(state: &FlightBookerState) -> &'static str {
-    match state {
-        FlightBookerState::OneWay(_) => "",
-        FlightBookerState::Return(_) => "disabled",
-    }
-}
-
-pub fn calculate_book_disabled(state: &FlightBookerState) -> &'static str {
-    match state {
-        FlightBookerState::OneWay(OneWayFlight { from: from_opt }) => {
-            if let Some(from) = from_opt {
-                if !validate_date(from) {
-                    return "true";
-                }
-            }
-            "false"
-        }
-        FlightBookerState::Return(ReturnFlight { from: from_opt, to: to_opt }) => {
-            if let Some(from) = from_opt {
-                if !validate_date(from) {
-                    return "true";
-                }
-            }
-            if let Some(to) = to_opt {
-                if !validate_date(to) {
-                    return "true";
-                }
-            }
-            "false"
-        }
-    }
-}
-
-pub fn options(state: &FlightBookerState) -> Markup {
-    match state {
-        FlightBookerState::OneWay(_) => {
-            html! {
-                option value="one-way" selected="selected" { "One Way" }
-                option value="return" { "Return" }
-            }
-        }
-        FlightBookerState::Return(_) => {
-            html! {
-                option value="one-way" { "One Way" }
-                option value="return" selected="selected" { "Return" }
-            }
-        }
-    }
-}
-
-pub fn to_input(state: &FlightBookerState) -> Markup {
-    match state {
-        FlightBookerState::OneWay(_) => {
-            html! {
-                input
-                    type="text"
-                    name="to"
-                    disabled="disabled"
-                ;
-            }
-        }
-        FlightBookerState::Return(ReturnFlight { from: _, to: to_opt }) => {
-            let to = to_opt.clone().unwrap_or(String::new());
-            html! {
-                input
-                    type="text"
-                    name="to"
-                    class={ (calculate_to_class(state)) }
-                    value={ (to) }
-                ;
-            }
-        }
-    }
-}
-
-pub fn from_input(state: &FlightBookerState) -> Markup {
-    let from_opt = match state {
-        FlightBookerState::OneWay(OneWayFlight { from: from_opt }) => {
-            from_opt.clone()
-        }
-        FlightBookerState::Return(ReturnFlight { from: from_opt, to: _ }) => {
-            from_opt.clone()
-        }
-    };
-    let from = from_opt.unwrap_or(String::new());
-    html! {
-        input
-            type="text"
-            name="from"
-            class={ (calculate_from_class(state)) }
-            value={ (from) }
-        ;
-    }
+    true
 }
 
 pub fn component(state: &FlightBookerState) -> Markup {
@@ -212,6 +109,51 @@ pub fn component(state: &FlightBookerState) -> Markup {
                 }
 
                 return true;
+            },
+
+            isValidRange(from, to) {
+                // TODO: think about how to cache this, as the splitting is
+                //       redone again and again
+                if (this.isValidDate(from) && this.isValidDate(to)) {
+                    const fromParts = from.split('.');
+                    const toParts = to.split('.');
+                    const fromDay = parseInt(fromParts[0], 10);
+                    const fromMonth = parseInt(fromParts[1], 10);
+                    const fromYear = parseInt(fromParts[2], 10);
+                    const toDay = parseInt(toParts[0], 10);
+                    const toMonth = parseInt(toParts[1], 10);
+                    const toYear = parseInt(toParts[2], 10);
+
+                    if (fromDay > toDay) {
+                        return false;
+                    }
+                    if (fromMonth > toMonth) {
+                        return false;
+                    }
+                    if (fromYear > toYear) {
+                        return false;
+                    }
+                    return true;
+                }
+            },
+
+            canBook() {
+                if (this.flightType === 'one-way') {
+                    return this.isValidDate(this.from);
+                } else {
+                    return this.isValidRange(this.from, this.to);
+                }
+                console.warn('canBook: unreachable code');
+                return false;
+            },
+
+            reset() {
+                this.from = '';
+                this.fromTouched = false;
+                this.fromMessage = '';
+                this.to = '';
+                this.toTouched = false;
+                this.toMessage = '';
             },
         }" {
             fieldset {
@@ -257,6 +199,8 @@ pub fn component(state: &FlightBookerState) -> Markup {
                                 toMessage = 'Date must not be empty';
                             } else if (!isValidDate(to)) {
                                 toMessage = 'Expected format: DD.MM.YYYY';
+                            } else if (!isValidRange(from, to)) {
+                                toMessage = 'From date must be before to date';
                             } else {
                                 toMessage = '';
                             }
@@ -267,16 +211,39 @@ pub fn component(state: &FlightBookerState) -> Markup {
                 }
                 button
                     type="submit"
-                    hx-post="/flight-booker-component"
+                    hx-post="/flight-booker-submit"
                     hx-target="#flight-booker"
                     hx-swap="outerHTML"
+                    ":disabled"="canBook() ? undefined : 'disabled'"
                     { "Book" };
                 button
                     type="button"
-                    hx-post="/flight-booker-reset"
-                    hx-target="#flight-booker"
-                    hx-swap="outerHTML"
+                    "@click"="reset()"
                     { "Reset" };
+            }
+        }
+    }
+}
+
+pub fn component_success() -> Markup {
+    html! {
+        form #flight-booker x-data="{}" {
+            fieldset {
+                label {
+                    "Booked successfully! See you at the airport!"
+                }
+            }
+        }
+    }
+}
+
+pub fn component_unreachable() -> Markup {
+    html! {
+        form #flight-booker x-data="{}" {
+            fieldset {
+                label {
+                    "An unexpected error happened. Please try again later!"
+                }
             }
         }
     }
@@ -298,7 +265,7 @@ fn empty_string_to_none(string_opt: Option<String>) -> Option<String> {
     }
 }
 
-pub fn mutate_state(state: &mut FlightBookerState, form_data: FormData) {
+pub fn check_state(state: &mut FlightBookerState, form_data: FormData) {
     match form_data.flight_type {
         Some(ref flight_type) if flight_type == "one-way" => {
             *state = FlightBookerState::OneWay(OneWayFlight {
@@ -320,24 +287,28 @@ pub fn mutate_state(state: &mut FlightBookerState, form_data: FormData) {
     debug!("State after mutation: {:?}", state);
 }
 
-pub fn reset_state(state: &mut FlightBookerState) {
-    *state = FlightBookerState::OneWay(OneWayFlight {
-        from: None,
-    });
+pub fn check_submission(form_data: &FormData) -> bool {
+    match (&form_data.flight_type, &form_data.from, &form_data.to) {
+        (Some(ref flight_type), Some(from), _) if flight_type == "one-way" => {
+            validate_date(from)
+        }
+        (Some(ref flight_type), Some(from), Some(to)) if flight_type == "return" => {
+            validate_range(from, to)
+        }
+        _ => {
+            false
+        }
+    }
 }
 
-pub async fn page_component(
-    State(app_state_arc): State<Arc<Mutex<AppState>>>,
+pub async fn page_submit(
     Form(form_data): Form<FormData>,
 ) -> Markup {
     debug!("Form data: {:?}", form_data);
-    if let Ok(mut app_state) = app_state_arc.lock() {
-        mutate_state(&mut app_state.flight_booker_state, form_data);
-        component(&app_state.flight_booker_state)
+    if check_submission(&form_data) {
+        component_success()
     } else {
-        html! {
-            "Unable to get app state"
-        }
+        component_unreachable()
     }
 }
 
@@ -358,19 +329,6 @@ pub async fn page(
             h1 { "Flight Booker" }
             { (data) }
             (home_back_link())
-        }
-    }
-}
-
-pub async fn page_reset(
-    State(app_state_arc): State<Arc<Mutex<AppState>>>,
-) -> Markup {
-    if let Ok(mut app_state) = app_state_arc.lock() {
-        reset_state(&mut app_state.flight_booker_state);
-        component(&app_state.flight_booker_state)
-    } else {
-        html! {
-            "Unable to get app state"
         }
     }
 }
