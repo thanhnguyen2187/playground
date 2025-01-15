@@ -5,6 +5,7 @@ mod temperature_converter;
 mod flight_booker;
 mod timer;
 mod crud;
+mod err;
 
 use std::env;
 use std::sync::{Arc, Mutex};
@@ -13,12 +14,14 @@ use axum::routing::post;
 use log::info;
 use maud::{html, Markup};
 use crate::common::header;
+use crate::crud::{state_mod as state_crud};
 use crate::flight_booker::{FlightBookerState, OneWayFlight};
 
 #[derive(Debug)]
 pub struct AppState {
     counter: i32,
     flight_booker_state: FlightBookerState,
+    crud_state: state_crud::Impl,
 }
 
 pub async fn page() -> Markup {
@@ -53,6 +56,7 @@ async fn main() {
         .route("/flight-booker-submit", post(flight_booker::page_submit))
         .route("/timer", get(timer::page))
         .route("/crud", get(crud::page))
+        .route("/crud-state/{field}", post(crud::mutate_state))
         .route("/circle-drawer", get(common::page_unimplemented))
         .route("/hello-world", get(common::page_unimplemented))
         .fallback(handlers::default_fallback)
@@ -64,6 +68,7 @@ async fn main() {
                     from: None,
                 }
             ),
+            crud_state: state_crud::new(),
         })));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();

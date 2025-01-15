@@ -2,8 +2,8 @@ use maud::{html, Markup, DOCTYPE};
 
 pub fn header(page_title: &str) -> Markup {
     html! {
+        (DOCTYPE)
         head {
-            (DOCTYPE)
             meta charset="utf-8";
             title { (page_title) };
             link rel="stylesheet" type="text/css" href="https://matcha.mizu.sh/matcha.css";
