@@ -5,7 +5,7 @@ use log::{debug, info, warn};
 use maud::{html, Markup};
 use serde::Deserialize;
 use crate::AppState;
-use crate::index::{header, home_back_link};
+use crate::common::{header, home_back_link};
 
 #[derive(Debug)]
 pub struct OneWayFlight {
