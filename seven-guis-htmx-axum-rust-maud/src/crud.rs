@@ -8,6 +8,7 @@ use maud::{html, Markup};
 use snafu::{whatever, ResultExt};
 use crate::AppState;
 use crate::common::{header, home_back_link};
+use crate::crud::components::input_filter;
 use crate::err::{Result};
 
 pub mod components {
@@ -20,6 +21,8 @@ pub mod components {
                 type="text"
                 name="filter"
                 value=(filter)
+                hx-post="/crud-state/filter"
+                hx-trigger="change"
             ;
         }
     }
@@ -113,57 +116,67 @@ pub async fn mutate_state(
     Ok(StatusCode::CREATED)
 }
 
-pub async fn page() -> Markup {
-    html! {
-        (header("CRUD"))
-        body {
-            h1 { "CRUD" }
-            form {
-                fieldset {
-                    label {
-                        "Filter: "
-                        input
-                            type="text"
-                            name="name"
-                        ;
-                    }
-                }
-
-                fieldset .flex {
-                    label .mr-2 style="width: 14em;" {
-                        select size="5" name="status" {
-                            option value="all" { "All" }
-                            option value="active" { "Active" }
-                            option value="inactive" { "Inactive" }
-                        }
-                    }
-
-                    div {
+pub async fn page(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+) -> Markup {
+    let mut filter = String::new();
+    if let Ok(state) = state_arc.lock() {
+        filter = state.crud_state.filter.clone();
+        html! {
+            (header("CRUD"))
+            body {
+                h1 { "CRUD" }
+                form {
+                    fieldset {
                         label {
-                            "Name: "
-                            input
-                                type="text"
-                                name="name"
-                            ;
-                        }
-
-                        label {
-                            "Surname: "
-                            input
-                                type="text"
-                                name="surname"
-                            ;
+                            "Filter: "
+                            (input_filter(filter))
                         }
                     }
-                }
 
-                fieldset {
-                    button { "Create" };
-                    button { "Update" };
-                    button { "Delete" };
+                    fieldset .flex {
+                        label .mr-2 style="width: 14em;" {
+                            select size="5" name="status" {
+                                option value="all" { "All" }
+                                option value="active" { "Active" }
+                                option value="inactive" { "Inactive" }
+                            }
+                        }
+
+                        div {
+                            label {
+                                "Name: "
+                                input
+                                    type="text"
+                                    name="name"
+                                ;
+                            }
+
+                            label {
+                                "Surname: "
+                                input
+                                    type="text"
+                                    name="surname"
+                                ;
+                            }
+                        }
+                    }
+
+                    fieldset {
+                        button { "Create" };
+                        button { "Update" };
+                        button { "Delete" };
+                    }
                 }
+                (home_back_link())
             }
-            (home_back_link())
+        }
+    } else {
+        html! {
+            (header("CRUD"))
+            body {
+                p { "Error loading state" }
+            }
         }
     }
 }
