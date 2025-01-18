@@ -6,6 +6,8 @@ mod flight_booker;
 mod timer;
 mod crud;
 mod err;
+mod db;
+mod schema;
 
 use std::env;
 use std::sync::{Arc, Mutex};

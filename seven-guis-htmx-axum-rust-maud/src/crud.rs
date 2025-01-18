@@ -9,13 +9,13 @@ use snafu::{whatever, ResultExt};
 use crate::AppState;
 use crate::common::{header, home_back_link};
 use crate::crud::components::{form_person, select_persons};
-use crate::crud::state_mod::Person;
+use crate::db::Person;
 use rand::distributions::{Alphanumeric, DistString};
-use crate::err::{Result};
+use crate::err::Result;
 
 pub mod components {
     use maud::{html, Markup};
-    use crate::crud::state_mod::Person;
+    use crate::db::Person;
 
     pub fn select_persons(persons: &Vec<Person>) -> Markup {
         if persons.is_empty() {
@@ -89,13 +89,7 @@ pub fn generate_id() -> String {
 
 pub mod state_mod {
     use serde::Deserialize;
-
-    #[derive(Debug, Clone)]
-    pub struct Person {
-        pub id: String,
-        pub name: String,
-        pub surname: String,
-    }
+    use crate::db::Person;
 
     #[derive(Debug)]
     pub struct Impl {
