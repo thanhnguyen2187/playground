@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use dotenvy::dotenv;
 use std::env;
 use snafu::ResultExt;
 use crate::err::Result;

@@ -1,28 +1,8 @@
-use std::sync::{Arc, Mutex};
-use axum::extract::State;
 use axum::Form;
-use log::{debug, info, warn};
+use log::{debug};
 use maud::{html, Markup};
 use serde::Deserialize;
-use crate::AppState;
 use crate::common::{header, home_back_link};
-
-#[derive(Debug)]
-pub struct OneWayFlight {
-    pub from: Option<String>,
-}
-
-#[derive(Debug)]
-pub struct ReturnFlight {
-    pub from: Option<String>,
-    pub to: Option<String>,
-}
-
-#[derive(Debug)]
-pub enum FlightBookerState {
-    OneWay(OneWayFlight),
-    Return(ReturnFlight),
-}
 
 pub fn validate_date(date: &String) -> bool {
     let parts = date.split('.').collect::<Vec<&str>>();
@@ -72,7 +52,7 @@ pub fn validate_range(from: &String, to: &String) -> bool {
     true
 }
 
-pub fn component(state: &FlightBookerState) -> Markup {
+pub fn component() -> Markup {
     html! {
         form #flight-booker x-data="{
             flightType: 'one-way',
@@ -257,36 +237,6 @@ pub struct FormData {
     to: Option<String>,
 }
 
-fn empty_string_to_none(string_opt: Option<String>) -> Option<String> {
-    if Some(String::new()) == string_opt {
-        None
-    } else {
-        string_opt
-    }
-}
-
-pub fn check_state(state: &mut FlightBookerState, form_data: FormData) {
-    match form_data.flight_type {
-        Some(ref flight_type) if flight_type == "one-way" => {
-            *state = FlightBookerState::OneWay(OneWayFlight {
-                from: empty_string_to_none(form_data.from),
-            });
-        }
-        Some(ref flight_type) if flight_type == "return" => {
-            *state = FlightBookerState::Return(ReturnFlight {
-                from: empty_string_to_none(form_data.from),
-                to: empty_string_to_none(form_data.to),
-            });
-        }
-        _ => {
-            *state = FlightBookerState::OneWay(OneWayFlight {
-                from: None,
-            });
-        }
-    }
-    debug!("State after mutation: {:?}", state);
-}
-
 pub fn check_submission(form_data: &FormData) -> bool {
     match (&form_data.flight_type, &form_data.from, &form_data.to) {
         (Some(ref flight_type), Some(from), _) if flight_type == "one-way" => {
@@ -312,22 +262,12 @@ pub async fn page_submit(
     }
 }
 
-pub async fn page(
-    State(app_state_arc): State<Arc<Mutex<AppState>>>,
-) -> Markup {
-    let data = if let Ok(app_state) = app_state_arc.lock() {
-        component(&app_state.flight_booker_state)
-    } else {
-        html! {
-            "Unable to get app state"
-        }
-    };
-
+pub async fn page() -> Markup {
     html! {
         (header("Flight Booker"))
         body {
             h1 { "Flight Booker" }
-            { (data) }
+            { (component()) }
             (home_back_link())
         }
     }

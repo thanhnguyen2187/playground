@@ -18,14 +18,10 @@ use dotenvy::dotenv;
 use log::info;
 use maud::{html, Markup};
 use crate::common::header;
-use crate::crud::{state_mod as state_crud};
 use crate::db::establish_connection;
-use crate::flight_booker::{FlightBookerState, OneWayFlight};
 
 pub struct AppState {
     counter: i32,
-    flight_booker_state: FlightBookerState,
-    crud_state: state_crud::Impl,
     sqlite_connection: SqliteConnection,
 }
 
@@ -62,7 +58,6 @@ async fn main() {
         .route("/flight-booker-submit", post(flight_booker::page_submit))
         .route("/timer", get(timer::page))
         .route("/crud", get(crud::page))
-        .route("/crud-state/{field}", post(crud::mutate_state))
         .route("/crud", post(crud::create))
         .route("/crud", put(crud::update))
         .route("/crud", delete(crud::delete))
@@ -72,13 +67,6 @@ async fn main() {
         .fallback(handlers::default_fallback)
         .with_state(Arc::new(Mutex::new(AppState {
             counter: 0,
-            flight_booker_state:
-            FlightBookerState::OneWay(
-                OneWayFlight {
-                    from: None,
-                }
-            ),
-            crud_state: state_crud::new(),
             sqlite_connection: establish_connection().expect("Failed to connect to database"),
         })));
 
