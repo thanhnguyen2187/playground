@@ -1,12 +1,9 @@
 use clap::Parser;
 use cli::parse_addr::parse_addr;
 use snafu::ResultExt;
-use std::fmt::Debug;
-use std::io::{BufRead, BufReader, Read, Write};
-use std::net::TcpStream;
-use std::process::exit;
-use std::time::Duration;
-use tokio::io::AsyncReadExt;
+use std::io::{Read, Write};
+use std::net::{Shutdown, TcpStream};
+use log::info;
 
 mod cli {
     pub mod parse_addr;
@@ -48,36 +45,31 @@ enum Commands {
 fn main() -> kvs::Result<()> {
     let cli = Cli::parse();
     parse_addr(&cli.addr)?;
-    let mut stream = TcpStream::connect(&cli.addr)
-        .with_whatever_context(|_| format!("Unable to connect to server at {}", &cli.addr))?;
+    let mut stream = TcpStream::connect(&cli.addr).with_whatever_context(|_| {
+        format!("Unable to connect to server at {}", &cli.addr)
+    })?;
 
     match cli.command {
         Commands::Get { key } => {
-            // stream
-            //     .set_read_timeout(Some(Duration::new(1, 0)))
-            //     .with_whatever_context(|e| format!("Unable to set stream read timeout {}", e))?;
-            write!(stream, "GET {}\n", key)
+            write!(stream, "GET {}", key)
                 .with_whatever_context(|_| format!("Unable to write to stream at {}", &cli.addr))?;
             let mut response = String::new();
+            stream
+                .shutdown(Shutdown::Write)
+                .with_whatever_context(|err| {
+                    format!("Unable to shut down stream at {}: {}", &cli.addr, err)
+                })?;
             stream
                 .read_to_string(&mut response)
                 .with_whatever_context(|_| {
                     format!("Unable to read response from server at {}", &cli.addr)
                 })?;
-            drop(stream);
-            // let mut vec = Vec::new();
-            // buf_reader.read_to_end(&mut vec).with_whatever_context(|_| {
-            //     format!("Unable to read response from server at {}", &cli.addr)
-            // })?;
-            // let response = String::from_utf8(vec).with_whatever_context(|_| {
-            //     format!("Unable to parse response from server at {}", &cli.addr)
-            // })?;
             println!("{}", response);
         }
-        Commands::Set { key, value } => {
+        Commands::Set { key: _, value: _ } => {
             unimplemented!()
         }
-        Commands::Rm { key } => {
+        Commands::Rm { key: _ } => {
             unimplemented!()
         }
     }

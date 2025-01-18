@@ -12,6 +12,7 @@ use std::env;
 use std::io::{BufRead, BufReader, BufWriter, Cursor, Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::ops::DerefMut;
+use tokio::io::AsyncWriteExt;
 
 mod cli {
     pub mod engine;
@@ -71,6 +72,9 @@ fn respond<T: Write>(stream: &mut T, command_response: CommandResponse) -> Resul
             buf_writer
                 .flush()
                 .with_whatever_context(|e| format!("Error happened flushing {}", e))?;
+            // stream.shutdown(Shutdown::Both).with_whatever_context(
+            //     |err| "Unable to shut down stream",
+            // )?;
         }
         CommandResponse::Set {} => {}
         CommandResponse::Rm { value } => {
@@ -82,6 +86,9 @@ fn respond<T: Write>(stream: &mut T, command_response: CommandResponse) -> Resul
                 buf_writer
                     .flush()
                     .with_whatever_context(|e| format!("Error happened flushing {}", e))?;
+                // stream.shutdown(Shutdown::Both).with_whatever_context(
+                //     |err| "Unable to shut down stream",
+                // )?;
             }
         }
     }
@@ -233,7 +240,6 @@ fn main() -> Result<()> {
         info!("Response: {:?}", command_response);
         respond(&mut stream, command_response)?;
         info!("Sent response");
-        // drop(stream);
         // stream.shutdown(Shutdown::Both).with_whatever_context(
         //     |err| "Unable to shut down stream",
         // )?;

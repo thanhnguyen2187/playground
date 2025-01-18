@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::{read_to_string, OpenOptions};
 use std::io::Write;
-use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 
 pub const DEFAULT_FILE_NAME: &str = "kvs.db";
