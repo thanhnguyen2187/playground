@@ -10,7 +10,7 @@ mod err;
 use std::env;
 use std::sync::{Arc, Mutex};
 use axum::{routing::get, Router};
-use axum::routing::post;
+use axum::routing::{delete, post, put};
 use log::info;
 use maud::{html, Markup};
 use crate::common::header;
@@ -27,7 +27,7 @@ pub struct AppState {
 pub async fn page() -> Markup {
     html! {
         (header("Seven GUIs in Rust"))
-        body {
+        body hx-boost="true" {
             h1 { "Seven GUIs in Rust" }
             ul {
                 li { a href="/counter" { "Counter" } }
@@ -57,6 +57,10 @@ async fn main() {
         .route("/timer", get(timer::page))
         .route("/crud", get(crud::page))
         .route("/crud-state/{field}", post(crud::mutate_state))
+        .route("/crud", post(crud::create))
+        .route("/crud", put(crud::update))
+        .route("/crud", delete(crud::delete))
+        .route("/crud/update-filter", post(crud::update_filter))
         .route("/circle-drawer", get(common::page_unimplemented))
         .route("/hello-world", get(common::page_unimplemented))
         .fallback(handlers::default_fallback)

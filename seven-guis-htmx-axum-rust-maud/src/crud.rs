@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::sync::{Arc, Mutex};
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::Form;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
@@ -8,31 +8,74 @@ use maud::{html, Markup};
 use snafu::{whatever, ResultExt};
 use crate::AppState;
 use crate::common::{header, home_back_link};
-use crate::crud::components::input_filter;
+use crate::crud::components::{form_person, select_persons};
+use crate::crud::state_mod::Person;
+use rand::distributions::{Alphanumeric, DistString};
 use crate::err::{Result};
 
 pub mod components {
     use maud::{html, Markup};
     use crate::crud::state_mod::Person;
 
-    pub fn input_filter(filter: String) -> Markup {
-        html! {
-            input
-                type="text"
-                name="filter"
-                value=(filter)
-                hx-post="/crud-state/filter"
-                hx-trigger="change"
-            ;
+    pub fn select_persons(persons: &Vec<Person>) -> Markup {
+        if persons.is_empty() {
+            html! {
+                span { "No data yet" };
+            }
+        } else {
+            html! {
+                select
+                size="5"
+                x-model="id_selected"
+                name="id-selected" {
+                    @for person in persons {
+                        option
+                            value=(person.id)
+                            "@click"={
+                                (format!(
+                                    r#"
+                                        id_selected = '{}';
+                                        name = '{}';
+                                        surname = '{}';
+                                    "#,
+                                    person.id,
+                                    person.name,
+                                    person.surname,
+                                ))
+                            }
+                            {
+                                (person.name)
+                                ", "
+                                (person.surname)
+                            }
+                    }
+                };
+            }
         }
     }
 
-    pub fn select_persons(persons: &Vec<Person>) -> Markup {
-        unimplemented!()
-    }
-
     pub fn form_person(Person { id, name, surname }: &Person) -> Markup {
-        unimplemented!()
+        html! {
+            label {
+                "Name: "
+                input
+                    type="text"
+                    name="name"
+                    x-model="name"
+                    value=(name)
+                ;
+            }
+
+            label {
+                "Surname: "
+                input
+                    type="text"
+                    name="surname"
+                    x-model="surname"
+                    value=(surname)
+                ;
+            }
+        }
     }
 
     pub fn form_buttons() -> Markup {
@@ -40,10 +83,14 @@ pub mod components {
     }
 }
 
+pub fn generate_id() -> String {
+    Alphanumeric.sample_string(&mut rand::thread_rng(), 16)
+}
+
 pub mod state_mod {
     use serde::Deserialize;
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct Person {
         pub id: String,
         pub name: String,
@@ -60,6 +107,7 @@ pub mod state_mod {
     }
 
     #[derive(Debug, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
     pub struct FormData {
         pub filter: Option<String>,
         pub id_selected: Option<String>,
@@ -116,56 +164,180 @@ pub async fn mutate_state(
     Ok(StatusCode::CREATED)
 }
 
+pub async fn create(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Form(form_data): Form<state_mod::FormData>,
+) -> Markup {
+    if let Ok(mut state) = state_arc.lock() {
+        let id = generate_id();
+        let name = form_data.name.unwrap_or(String::new());
+        let surname = form_data.surname.unwrap_or(String::new());
+
+        let mut persons = &mut state.crud_state.persons;
+        persons.push(
+            Person {
+                id,
+                name,
+                surname,
+            }
+        );
+        select_persons(persons)
+    } else {
+        html! {
+            "Unable to get global state"
+        }
+    }
+}
+
+pub async fn update(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Form(form_data): Form<state_mod::FormData>,
+) -> Markup {
+    if let Ok(mut state) = state_arc.lock() {
+        let id = form_data.id_selected.unwrap_or(String::new());
+        let name = form_data.name.unwrap_or(String::new());
+        let surname = form_data.surname.unwrap_or(String::new());
+
+        let mut persons = &mut state.crud_state.persons;
+        for person in persons.iter_mut() {
+            if person.id == id {
+                person.name = name.clone();
+                person.surname = surname.clone();
+            }
+        }
+        select_persons(persons)
+    } else {
+        html! {
+            "Unable to get global state"
+        }
+    }
+}
+
+pub async fn delete(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Query(params): Query<state_mod::FormData>,
+) -> Markup {
+    if let Ok(mut state) = state_arc.lock() {
+        let id = params.id_selected.unwrap_or(String::new());
+        let mut persons = &mut state.crud_state.persons;
+        persons.retain(|person| person.id != id);
+        select_persons(persons)
+    } else {
+        html! {
+            "Unable to get global state"
+        }
+    }
+}
+
+pub async fn update_filter(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Form(form_data): Form<state_mod::FormData>,
+) -> Markup {
+    if let Ok(state) = state_arc.lock() {
+        let filter = form_data.filter.unwrap_or(String::new());
+        let persons_filtered = &state.crud_state.persons.iter().filter(
+            |&person| person.name.contains(&filter) || person.surname.contains(&filter)
+        ).cloned().collect();
+        select_persons(persons_filtered)
+    } else {
+        html! {
+            "Unable to get global state"
+        }
+    }
+}
+
 pub async fn page(
     State(state_arc): State<Arc<Mutex<AppState>>>,
 ) -> Markup {
-    let mut filter = String::new();
     if let Ok(state) = state_arc.lock() {
-        filter = state.crud_state.filter.clone();
+        let persons = &state.crud_state.persons;
         html! {
             (header("CRUD"))
             body {
                 h1 { "CRUD" }
-                form {
+                form x-data="{
+                    id_selected: '',
+                    filter: '',
+                    name: '',
+                    surname: '',
+
+                    reset() {
+                        this.id_selected = '';
+                        this.filter = '';
+                        this.name = '';
+                        this.surname = '';
+                    },
+                }" {
                     fieldset {
                         label {
                             "Filter: "
-                            (input_filter(filter))
+                            input
+                                type="text"
+                                name="filter"
+                                x-model="filter"
+                                hx-post="/crud/update-filter"
+                                hx-target="#select-persons"
+                            ;
                         }
                     }
 
                     fieldset .flex {
-                        label .mr-2 style="width: 14em;" {
-                            select size="5" name="status" {
-                                option value="all" { "All" }
-                                option value="active" { "Active" }
-                                option value="inactive" { "Inactive" }
-                            }
-                        }
+                        label
+                            #select-persons
+                            .mr-2
+                            style="width: 14em;"
+                            { (select_persons(persons)) };
 
-                        div {
-                            label {
-                                "Name: "
-                                input
-                                    type="text"
-                                    name="name"
-                                ;
-                            }
-
-                            label {
-                                "Surname: "
-                                input
-                                    type="text"
-                                    name="surname"
-                                ;
-                            }
+                        div #form-person {
+                            (form_person(&Person {
+                                id: String::new(),
+                                name: String::new(),
+                                surname: String::new()
+                            }))
                         }
                     }
 
                     fieldset {
-                        button { "Create" };
-                        button { "Update" };
-                        button { "Delete" };
+                        button
+                            type="button"
+                            hx-post="/crud"
+                            hx-target="#select-persons"
+                            "@click"="
+                                setTimeout(() => {
+                                    reset();
+                                }, 0);
+                            "
+                            { "Create" };
+                        button
+                            type="button"
+                            hx-put="/crud"
+                            hx-target="#select-persons"
+                            "@click"="
+                                setTimeout(() => {
+                                    reset();
+                                }, 0);
+                            "
+                            { "Update" };
+                        button
+                            type="button"
+                            hx-delete="/crud"
+                            hx-include="[name='id-selected']"
+                            hx-target="#select-persons"
+                            hx-confirm="Are you sure you want to delete?"
+                            "@click"="
+                                setTimeout(() => {
+                                    reset();
+                                }, 0);
+                            "
+                            { "Delete" };
+                        button
+                            type="button"
+                            "@click"="
+                                setTimeout(() => {
+                                    reset();
+                                }, 0);
+                            "
+                            { "Reset" };
                     }
                 }
                 (home_back_link())
