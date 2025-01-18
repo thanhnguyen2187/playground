@@ -6,7 +6,7 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use maud::{html, Markup};
 use snafu::{whatever, ResultExt};
-use crate::AppState;
+use crate::{db, AppState};
 use crate::common::{header, home_back_link};
 use crate::crud::components::{form_person, select_persons};
 use crate::db::Person;
@@ -161,90 +161,115 @@ pub async fn mutate_state(
 pub async fn create(
     State(state_arc): State<Arc<Mutex<AppState>>>,
     Form(form_data): Form<state_mod::FormData>,
-) -> Markup {
-    if let Ok(mut state) = state_arc.lock() {
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
         let id = generate_id();
         let name = form_data.name.unwrap_or(String::new());
         let surname = form_data.surname.unwrap_or(String::new());
+        let filter = state.crud_state.filter.clone();
 
-        let mut persons = &mut state.crud_state.persons;
-        persons.push(
-            Person {
-                id,
-                name,
-                surname,
-            }
-        );
+        let conn = &mut state.sqlite_connection;
+        db::insert_person(conn, &Person {
+            id: id.clone(),
+            name,
+            surname,
+        })?;
+        let persons = &db::get_persons(
+            conn,
+            &filter,
+        )?;
         select_persons(persons)
     } else {
         html! {
             "Unable to get global state"
         }
-    }
+    };
+
+    Ok(markup)
 }
 
 pub async fn update(
     State(state_arc): State<Arc<Mutex<AppState>>>,
     Form(form_data): Form<state_mod::FormData>,
-) -> Markup {
-    if let Ok(mut state) = state_arc.lock() {
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
         let id = form_data.id_selected.unwrap_or(String::new());
         let name = form_data.name.unwrap_or(String::new());
         let surname = form_data.surname.unwrap_or(String::new());
+        let filter = form_data.filter.unwrap_or(String::new());
 
-        let mut persons = &mut state.crud_state.persons;
-        for person in persons.iter_mut() {
-            if person.id == id {
-                person.name = name.clone();
-                person.surname = surname.clone();
-            }
-        }
+        let conn = &mut state.sqlite_connection;
+        db::update_person(conn, &Person {
+            id: id.clone(),
+            name,
+            surname,
+        })?;
+        let persons = &db::get_persons(
+            conn,
+            &filter,
+        )?;
         select_persons(persons)
     } else {
         html! {
             "Unable to get global state"
         }
-    }
+    };
+
+    Ok(markup)
 }
 
 pub async fn delete(
     State(state_arc): State<Arc<Mutex<AppState>>>,
     Query(params): Query<state_mod::FormData>,
-) -> Markup {
-    if let Ok(mut state) = state_arc.lock() {
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
         let id = params.id_selected.unwrap_or(String::new());
-        let mut persons = &mut state.crud_state.persons;
-        persons.retain(|person| person.id != id);
+        let filter = params.filter.unwrap_or(String::new());
+        let conn = &mut state.sqlite_connection;
+        db::delete_person(conn, &id)?;
+        let persons = &db::get_persons(
+            conn,
+            &filter,
+        )?;
         select_persons(persons)
     } else {
         html! {
             "Unable to get global state"
         }
-    }
+    };
+
+    Ok(markup)
 }
 
 pub async fn update_filter(
     State(state_arc): State<Arc<Mutex<AppState>>>,
     Form(form_data): Form<state_mod::FormData>,
-) -> Markup {
-    if let Ok(state) = state_arc.lock() {
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
         let filter = form_data.filter.unwrap_or(String::new());
-        let persons_filtered = &state.crud_state.persons.iter().filter(
-            |&person| person.name.contains(&filter) || person.surname.contains(&filter)
-        ).cloned().collect();
-        select_persons(persons_filtered)
+        let conn = &mut state.sqlite_connection;
+        let persons = &db::get_persons(
+            conn,
+            &filter,
+        )?;
+        select_persons(persons)
     } else {
         html! {
             "Unable to get global state"
         }
-    }
+    };
+
+    Ok(markup)
 }
 
 pub async fn page(
     State(state_arc): State<Arc<Mutex<AppState>>>,
-) -> Markup {
-    if let Ok(state) = state_arc.lock() {
-        let persons = &state.crud_state.persons;
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
+        let persons = &db::get_persons(
+            &mut state.sqlite_connection,
+            &String::new(),
+        )?;
         html! {
             (header("CRUD"))
             body {
@@ -344,5 +369,7 @@ pub async fn page(
                 p { "Error loading state" }
             }
         }
-    }
+    };
+
+    Ok(markup)
 }

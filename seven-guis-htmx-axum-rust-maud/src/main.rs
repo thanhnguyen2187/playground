@@ -13,17 +13,20 @@ use std::env;
 use std::sync::{Arc, Mutex};
 use axum::{routing::get, Router};
 use axum::routing::{delete, post, put};
+use diesel::SqliteConnection;
+use dotenvy::dotenv;
 use log::info;
 use maud::{html, Markup};
 use crate::common::header;
 use crate::crud::{state_mod as state_crud};
+use crate::db::establish_connection;
 use crate::flight_booker::{FlightBookerState, OneWayFlight};
 
-#[derive(Debug)]
 pub struct AppState {
     counter: i32,
     flight_booker_state: FlightBookerState,
     crud_state: state_crud::Impl,
+    sqlite_connection: SqliteConnection,
 }
 
 pub async fn page() -> Markup {
@@ -45,6 +48,7 @@ pub async fn page() -> Markup {
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
     env_logger::init_from_env(env_logger::Env::default().default_filter_or("debug"));
     info!("Logger initialized!");
     info!("Logger level: {}", env::var("RUST_LOG").unwrap_or("debug".to_string()));
@@ -75,6 +79,7 @@ async fn main() {
                 }
             ),
             crud_state: state_crud::new(),
+            sqlite_connection: establish_connection().expect("Failed to connect to database"),
         })));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
