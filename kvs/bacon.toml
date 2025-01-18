@@ -1,0 +1,7 @@
+default_job = "server-tcp"
+
+[jobs.server-tcp]
+command = ["cargo", "run", "--bin", "kvs-server-tcp"]
+need_stdout = true
+background = false
+on_change_strategy = "kill_then_restart"
