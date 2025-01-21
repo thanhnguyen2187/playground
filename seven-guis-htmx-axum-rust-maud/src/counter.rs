@@ -59,7 +59,7 @@ pub fn counter_component(app_state: &AppState) -> Markup {
     }
 }
 
-pub async fn page_increase(
+pub async fn increase(
     State(app_state_arc): State<Arc<Mutex<AppState>>>,
 ) -> Markup {
     let data = if let Ok(mut app_state) = app_state_arc.lock() {

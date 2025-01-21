@@ -52,7 +52,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(page))
         .route("/counter", get(counter::page))
-        .route("/counter-increase", post(counter::page_increase))
+        .route("/counter-increase", post(counter::increase))
         .route("/temperature-converter", get(temperature_converter::page))
         .route("/flight-booker", get(flight_booker::page))
         .route("/flight-booker-submit", post(flight_booker::page_submit))
