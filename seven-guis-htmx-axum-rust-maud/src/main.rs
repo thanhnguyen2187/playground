@@ -27,9 +27,9 @@ pub struct AppState {
 
 pub async fn page() -> Markup {
     html! {
-        (header("Seven GUIs in Rust"))
+        (header("7 GUIs in HARM Stack"))
         body hx-boost="true" {
-            h1 { "Seven GUIs in Rust" }
+            h1 { "7 GUIs in HARM Stack" }
             ul {
                 li { a href="/counter" { "Counter" } }
                 li { a href="/temperature-converter" { "Temperature Converter" } }
@@ -37,6 +37,7 @@ pub async fn page() -> Markup {
                 li { a href="/timer" { "Timer" } }
                 li { a href="/crud" { "CRUD" } }
                 li { a href="/circle-drawer" { "Circle Drawer (Unimplemented)" } }
+                li { a href="/spreadsheet" { "Spreadsheet (Unimplemented)" } }
             }
         }
     }
@@ -63,7 +64,7 @@ async fn main() {
         .route("/crud", delete(crud::delete))
         .route("/crud/update-filter", post(crud::update_filter))
         .route("/circle-drawer", get(common::page_unimplemented))
-        .route("/hello-world", get(common::page_unimplemented))
+        .route("/spreadsheet", get(common::page_unimplemented))
         .fallback(handlers::default_fallback)
         .with_state(Arc::new(Mutex::new(AppState {
             counter: 0,
