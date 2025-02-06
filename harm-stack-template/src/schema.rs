@@ -2,7 +2,7 @@
 
 diesel::table! {
     todos (id) {
-        id -> Nullable<Text>,
+        id -> Text,
         title -> Text,
         completed -> Bool,
     }

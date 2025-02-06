@@ -1,6 +1,9 @@
 { pkgs ? import <nixpkgs> {} }:
 
 pkgs.mkShell {
+  packages = [
+    pkgs.sqlite
+  ];
   buildInputs = [
     (pkgs.stdenv.mkDerivation {
       name = "tailwindcss-extra";

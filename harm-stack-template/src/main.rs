@@ -1,6 +1,7 @@
 mod templates;
 mod db;
 mod err;
+mod schema;
 
 use crate::templates::page_unimplemented;
 use axum::{routing::get, Router};
