@@ -18,3 +18,4 @@ target/
 
 .direnv/
 .idea/
+.env

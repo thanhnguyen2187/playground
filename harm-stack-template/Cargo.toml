@@ -5,7 +5,10 @@ edition = "2021"
 
 [dependencies]
 axum = "0.8.1"
+diesel = { version = "2.2.7", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
+dotenvy = "0.15.7"
 maud = { version = "0.27.0", features = ["axum", "axum-core"] }
+snafu = "0.8.5"
 tokio = { version = "1.43.0", features = ["full"] }
 tower = { version = "0.5.2", features = ["util"] }
 tower-http = { version = "0.6.2", features = ["fs"] }
