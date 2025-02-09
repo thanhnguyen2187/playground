@@ -73,4 +73,81 @@ mod tests {
         };
         create_todo(&mut conn, &new_todo).expect("Should be able to create todo");
     }
+
+    #[test]
+    fn test_read_todos() {
+        let mut conn = establish_connection(&":memory:".to_owned())
+            .expect("Should be able to create in-memory database");
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("Should be able to run migrations");
+
+        let todos = read_todos(&mut conn).expect("Should be able to read todos");
+        assert_eq!(todos.len(), 0);
+
+        let new_todo = Todo {
+            id: "1".to_string(),
+            title: "Test".to_string(),
+            completed: false,
+        };
+        create_todo(&mut conn, &new_todo).expect("Should be able to create todo");
+
+        let todos = read_todos(&mut conn).expect("Should be able to read todos");
+        assert_eq!(todos.len(), 1);
+
+        let todo = todos.first().expect("Should be able to get first todo");
+        assert_eq!(todo.id, new_todo.id);
+    }
+
+    #[test]
+    fn test_update_todo() {
+        let mut conn = establish_connection(&":memory:".to_owned())
+            .expect("Should be able to create in-memory database");
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("Should be able to run migrations");
+
+        let new_todo = Todo {
+            id: "1".to_string(),
+            title: "Test".to_string(),
+            completed: false,
+        };
+        create_todo(&mut conn, &new_todo).expect("Should be able to create todo");
+
+        let updated_todo = Todo {
+            id: "1".to_string(),
+            title: "Updated".to_string(),
+            completed: true,
+        };
+        update_todo(&mut conn, &updated_todo).expect("Should be able to update todo");
+
+        let todos = read_todos(&mut conn).expect("Should be able to read todos");
+        assert_eq!(todos.len(), 1);
+
+        let todo = todos.first().expect("Should be able to get first todo");
+        assert_eq!(todo.id, updated_todo.id);
+        assert_eq!(todo.title, updated_todo.title);
+        assert_eq!(todo.completed, updated_todo.completed);
+    }
+
+    #[test]
+    fn test_delete_todo() {
+        let mut conn = establish_connection(&":memory:".to_owned())
+            .expect("Should be able to create in-memory database");
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("Should be able to run migrations");
+
+        let new_todo = Todo {
+            id: "1".to_string(),
+            title: "Test".to_string(),
+            completed: false,
+        };
+        create_todo(&mut conn, &new_todo).expect("Should be able to create todo");
+
+        let todos = read_todos(&mut conn).expect("Should be able to read todos");
+        assert_eq!(todos.len(), 1);
+
+        delete_todo(&mut conn, &new_todo.id).expect("Should be able to delete todo");
+
+        let todos = read_todos(&mut conn).expect("Should be able to read todos");
+        assert_eq!(todos.len(), 0);
+    }
 }
