@@ -1,12 +1,9 @@
 use crate::err::Result;
 use diesel::prelude::*;
 use snafu::ResultExt;
-use std::env;
 
-pub fn establish_connection() -> Result<SqliteConnection> {
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set either through environment variable or .env file");
-    SqliteConnection::establish(&database_url)
+pub fn establish_connection(database_url: &String) -> Result<SqliteConnection> {
+    SqliteConnection::establish(database_url)
         .with_whatever_context(|err| format!("Failed to connect to {}: {}", database_url, err))
 }
 
