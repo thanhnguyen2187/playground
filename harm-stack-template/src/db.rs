@@ -1,6 +1,9 @@
 use crate::err::Result;
 use diesel::prelude::*;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use snafu::ResultExt;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 pub fn establish_connection(database_url: &String) -> Result<SqliteConnection> {
     SqliteConnection::establish(database_url)
@@ -50,4 +53,24 @@ pub fn delete_todo(conn: &mut SqliteConnection, todo_id: &String) -> Result<usiz
     diesel::delete(todos.filter(id.eq(todo_id)))
         .execute(conn)
         .with_whatever_context(|err| format!("Failed to delete todo: {}", err))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use diesel_migrations::MigrationHarness;
+
+    #[test]
+    fn test_create_todo() {
+        let mut conn = establish_connection(&":memory:".to_owned())
+            .expect("Should be able to create in-memory database");
+        conn.run_pending_migrations(MIGRATIONS)
+            .expect("Should be able to run migrations");
+        let new_todo = Todo {
+            id: "1".to_string(),
+            title: "Test".to_string(),
+            completed: false,
+        };
+        create_todo(&mut conn, &new_todo).expect("Should be able to create todo");
+    }
 }
