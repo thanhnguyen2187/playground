@@ -13,15 +13,27 @@ pub fn header(page_title: &str) -> Markup {
     }
 }
 
-pub async fn page_unimplemented() -> Markup {
+pub fn home() -> Markup {
     html! {
-        (header("Unimplemented"))
+        (header("Home TODO"))
         body {
             div .prose {
-                h1 { "Unimplemented" }
+                h1 { "Home" }
             }
-            div .flex { "Test" }
+            div .container { "Test" }
             p { "Please check again later" }
+        }
+    }
+}
+
+pub async fn page_unimplemented() -> Markup {
+    html! {
+        (header("Unimplemented!!1"))
+        body {
+            div .container .mx-auto .p-4 {
+                h1 .text-3xl .font-bold .mb-2 { "Unimplemented" }
+                p { "Please check again later" }
+            }
         }
     }
 }
