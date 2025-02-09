@@ -13,15 +13,51 @@ pub fn header(page_title: &str) -> Markup {
     }
 }
 
-pub fn home() -> Markup {
+pub async fn home() -> Markup {
     html! {
-        (header("Home TODO"))
+        (header("TODO Home"))
         body {
-            div .prose {
-                h1 { "Home" }
+            div .container .mx-auto .p-4 .flex .flex-col .gap-2 {
+                h1 .text-3xl .font-bold { "TODO Home" }
+                table .table .w-80 {
+                    thead {
+                        tr {
+                            th { "Title" }
+                            th { "Actions" }
+                        }
+                    }
+                    tbody {
+                        tr {
+                            td {
+                                "loren ipsum"
+                            }
+                            td .flex .gap-2 {
+                                button .btn .btn-success { "Finish" }
+                                button .btn .btn-primary { "Edit" }
+                                button .btn { "Delete" }
+                            }
+                        }
+                        tr {
+                            td {
+                                input .input .input-bordered type="text" value="loren ipsum";
+                            }
+                            td .flex .gap-2 {
+                                button .btn .btn-primary { "Done" }
+                            }
+                        }
+                        tr {
+                            td .line-through {
+                                "loren ipsum"
+                            }
+                            td .flex .gap-2 {
+                                button .btn .btn-warning { "Reopen" }
+                                button .btn .btn-primary { "Edit" }
+                                button .btn { "Delete" }
+                            }
+                        }
+                    }
+                }
             }
-            div .container { "Test" }
-            p { "Please check again later" }
         }
     }
 }

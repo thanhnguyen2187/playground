@@ -4,7 +4,7 @@ mod schema;
 mod templates;
 
 use crate::err::Result;
-use crate::templates::page_unimplemented;
+use crate::templates::{home, page_unimplemented};
 use axum::{routing::get, Router};
 use snafu::ResultExt;
 use tower_http::services::ServeFile;
@@ -13,7 +13,7 @@ use tower_livereload::LiveReloadLayer;
 #[tokio::main]
 async fn main() -> Result<()> {
     let app = Router::new()
-        .route("/", get(page_unimplemented))
+        .route("/", get(home))
         .route_service("/styles.css", ServeFile::new("./static/styles.css"))
         .layer(LiveReloadLayer::new());
 
