@@ -34,3 +34,20 @@ pub fn read_todos(conn: &mut SqliteConnection) -> Result<Vec<Todo>> {
         .with_whatever_context(|err| format!("Failed to load persons: {}", err))?;
     Ok(results)
 }
+
+pub fn update_todo(conn: &mut SqliteConnection, item: &Todo) -> Result<usize> {
+    use crate::schema::todos::dsl::*;
+
+    diesel::update(todos.filter(id.eq(item.id.clone())))
+        .set(item)
+        .execute(conn)
+        .with_whatever_context(|err| format!("Failed to update todo: {}", err))
+}
+
+pub fn delete_todo(conn: &mut SqliteConnection, todo_id: &String) -> Result<usize> {
+    use crate::schema::todos::dsl::*;
+
+    diesel::delete(todos.filter(id.eq(todo_id)))
+        .execute(conn)
+        .with_whatever_context(|err| format!("Failed to delete todo: {}", err))
+}
