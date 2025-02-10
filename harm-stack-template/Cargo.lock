@@ -299,6 +299,8 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "maud",
+ "serde",
+ "serde_json",
  "snafu",
  "tokio",
  "tower",

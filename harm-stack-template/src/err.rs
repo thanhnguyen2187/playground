@@ -1,4 +1,4 @@
-use axum::http::{StatusCode};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use snafu::prelude::*;
 
@@ -8,13 +8,20 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     // #[snafu(display("ID may not be less than 10, but it was {id}"))]
     // InvalidId { id: u16 },
-
     #[snafu(whatever, display("{message}"))]
     Whatever {
         message: String,
         #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
         source: Option<Box<dyn std::error::Error>>,
     },
+
+    #[snafu(display("Database connection error: {}", source))]
+    DatabaseConnection {
+        source: diesel::result::ConnectionError,
+    },
+
+    #[snafu(display("Database migration error"))]
+    DatabaseMigration {},
 }
 
 impl IntoResponse for Error {
@@ -22,6 +29,7 @@ impl IntoResponse for Error {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Something went wrong: {}", self),
-        ).into_response()
+        )
+            .into_response()
     }
 }
