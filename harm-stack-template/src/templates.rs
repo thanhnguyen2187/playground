@@ -1,4 +1,5 @@
-use crate::db::{read_todo, read_todos, toggle_todo, update_todo, Todo};
+use crate::db::{create_todo, delete_todo, read_todo, read_todos, toggle_todo, update_todo, Todo};
+use uuid::Uuid;
 use crate::err::Result;
 use crate::AppState;
 use axum::extract::{Path, State};
@@ -7,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::sync::{Arc, Mutex};
 use axum::Form;
+use log::warn;
 
 pub fn header(page_title: &str) -> Markup {
     html! {
@@ -29,7 +31,7 @@ pub enum TodoState {
 }
 
 pub fn todo_row(todo: &Todo) -> Markup {
-    if todo.completed {
+    if !todo.completed {
         html! {
             tr {
                 td {
@@ -52,7 +54,14 @@ pub fn todo_row(todo: &Todo) -> Markup {
                         hx-swap="outerHTML"
                         { "Edit" }
                     ;
-                    button .btn { "Delete" }
+                    button
+                        .btn
+                        hx-confirm="Are you sure?"
+                        hx-delete=(format!("/delete/{}", todo.id.as_str()))
+                        hx-swap="delete"
+                        hx-target="closest tr"
+                        { "Delete" }
+                    ;
                 }
             }
         }
@@ -103,6 +112,17 @@ pub async fn home(State(state_arc): State<Arc<Mutex<AppState>>>) -> Result<Marku
                         tbody {
                             @for todo in todos {
                                 (todo_row(&todo))
+                            }
+                            tr {
+                                td {
+                                    button
+                                        .btn
+                                        .btn-success
+                                        hx-post="/create"
+                                        hx-target="closest tr"
+                                        hx-swap="beforebegin"
+                                    { "Create" };
+                                }
                             }
                         }
                     }
@@ -217,6 +237,41 @@ pub async fn page_save_todo(
         html! {
             "Unable to get global state"
         }
+    };
+
+    Ok(markup)
+}
+
+pub async fn page_create_todo(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
+        let id = Uuid::new_v4().to_string();
+        let todo_new = Todo {
+            id,
+            title: "New item".to_string(),
+            completed: false,
+        };
+        create_todo(&mut state.conn, &todo_new)?;
+        todo_row(&todo_new)
+    }
+    else {
+        html! {
+            "Unable to get global state"
+        }
+    };
+
+    Ok(markup)
+}
+
+pub async fn page_delete_todo(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Path(todo_id): Path<String>,
+) -> Result<()> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
+        delete_todo(&mut state.conn, &todo_id)?;
+    } else {
+        warn!("Unable to get global state");
     };
 
     Ok(markup)

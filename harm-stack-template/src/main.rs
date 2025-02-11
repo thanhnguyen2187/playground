@@ -5,14 +5,14 @@ mod templates;
 
 use crate::db::MIGRATIONS;
 use crate::err::{Error, Result};
-use crate::templates::{home, page_default_todo, page_edit_todo, page_save_todo, page_toggle_todo, page_unimplemented};
+use crate::templates::{home, page_create_todo, page_default_todo, page_delete_todo, page_edit_todo, page_save_todo, page_toggle_todo, page_unimplemented};
 use axum::{routing::get, Router};
 use diesel::SqliteConnection;
 use diesel_migrations::MigrationHarness;
 use dotenvy::dotenv;
 use snafu::ResultExt;
 use std::sync::{Arc, Mutex};
-use axum::routing::post;
+use axum::routing::{delete, post};
 use tower_http::services::ServeFile;
 use tower_livereload::LiveReloadLayer;
 
@@ -36,6 +36,8 @@ async fn main() -> Result<()> {
         .route("/default/{todo_id}", post(page_default_todo))
         .route("/edit/{todo_id}", post(page_edit_todo))
         .route("/save/{todo_id}", post(page_save_todo))
+        .route("/create", post(page_create_todo))
+        .route("/delete/{todo_id}", delete(page_delete_todo))
         .with_state(Arc::new(Mutex::new(AppState { conn })))
         .route_service("/styles.css", ServeFile::new("./static/styles.css"))
         .layer(LiveReloadLayer::new());
