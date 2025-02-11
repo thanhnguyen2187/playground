@@ -264,13 +264,13 @@ pub async fn page_delete_todo(
     State(state_arc): State<Arc<Mutex<AppState>>>,
     Path(todo_id): Path<String>,
 ) -> Result<()> {
-    let markup = if let Ok(mut state) = state_arc.lock() {
+    if let Ok(mut state) = state_arc.lock() {
         delete_todo(&mut state.conn, &todo_id)?;
     } else {
         warn!("Unable to get global state");
     };
 
-    Ok(markup)
+    Ok(())
 }
 
 pub async fn page_unimplemented() -> Markup {
