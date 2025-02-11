@@ -26,11 +26,12 @@ async fn main() -> Result<()> {
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut conn = db::establish_connection(&db_url)
         .with_whatever_context(|err| format!("Failed to connect to in-memory database {err}"))?;
+    // TODO: resolve this issue in a more thorough way as the error is not very
+    //       descriptive
     conn.run_pending_migrations(MIGRATIONS)
-        .map_err(|err| Error::DatabaseMigration {})?;
-    // conn.run_pending_migrations(MIGRATIONS)
-    //     .with_whatever_context(|err| format!("Failed to run migrations: {}", err))?;
+        .map_err(|_| Error::DatabaseMigration {})?;
     let app = Router::new()
+        .route("/unimplemented", get(page_unimplemented))
         .route("/", get(home))
         .route("/toggle/{todo_id}", post(page_toggle_todo))
         .route("/default/{todo_id}", post(page_default_todo))

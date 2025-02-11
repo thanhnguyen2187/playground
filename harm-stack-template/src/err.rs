@@ -6,18 +6,11 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
-    // #[snafu(display("ID may not be less than 10, but it was {id}"))]
-    // InvalidId { id: u16 },
     #[snafu(whatever, display("{message}"))]
     Whatever {
         message: String,
         #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
         source: Option<Box<dyn std::error::Error>>,
-    },
-
-    #[snafu(display("Database connection error: {}", source))]
-    DatabaseConnection {
-        source: diesel::result::ConnectionError,
     },
 
     #[snafu(display("Database migration error"))]
