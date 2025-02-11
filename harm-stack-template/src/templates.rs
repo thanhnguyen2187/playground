@@ -1,4 +1,4 @@
-use crate::db::{read_todo, read_todos, toggle_todo, Todo};
+use crate::db::{read_todo, read_todos, toggle_todo, update_todo, Todo};
 use crate::err::Result;
 use crate::AppState;
 use axum::extract::{Path, State};
@@ -6,6 +6,7 @@ use maud::{html, Markup, DOCTYPE};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::sync::{Arc, Mutex};
+use axum::Form;
 
 pub fn header(page_title: &str) -> Markup {
     html! {
@@ -27,9 +28,9 @@ pub enum TodoState {
     Done,
 }
 
-pub fn todo_row(state: TodoState, todo: &Todo) -> Markup {
-    match state {
-        TodoState::Default => html! {
+pub fn todo_row(todo: &Todo) -> Markup {
+    if todo.completed {
+        html! {
             tr {
                 td {
                     (todo.title.clone())
@@ -43,22 +44,20 @@ pub fn todo_row(state: TodoState, todo: &Todo) -> Markup {
                         hx-swap="outerHTML"
                         { "Finish" }
                     ;
-                    button .btn .btn-primary { "Edit" }
+                    button
+                        .btn
+                        .btn-primary
+                        hx-target="closest tr"
+                        hx-post=(format!("/edit/{}", todo.id.as_str()))
+                        hx-swap="outerHTML"
+                        { "Edit" }
+                    ;
                     button .btn { "Delete" }
                 }
             }
-        },
-        TodoState::Editing => html! {
-            tr {
-                td {
-                    input .input .input-bordered type="text" value=(todo.title.clone());
-                }
-                td .flex .gap-2 {
-                    button .btn .btn-primary { "Done" }
-                }
-            }
-        },
-        TodoState::Done => html! {
+        }
+    } else {
+        html! {
             tr {
                 td .line-through {
                     (todo.title.clone())
@@ -72,68 +71,17 @@ pub fn todo_row(state: TodoState, todo: &Todo) -> Markup {
                         hx-swap="outerHTML"
                         { "Reopen" }
                     ;
-                    button .btn .btn-primary { "Edit" }
                     button .btn { "Delete" }
                 }
             }
-        },
+        }
     }
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct TodoWithState {
+pub struct TodoWithTemp {
     pub data: Todo,
     pub data_temp: Todo,
-    pub state: TodoState,
-}
-
-pub fn todo_row_v2(todo: &Todo) -> Markup {
-    let todo_with_state = TodoWithState {
-        data: todo.clone(),
-        data_temp: todo.clone(),
-        state: TodoState::Default,
-    };
-    html! {
-        tr x-data=(serde_json::to_string(&todo_with_state).unwrap()) {
-            td x-text="data.title" x-show="state === 'Default'" {}
-            td .flex .gap-2 x-show="state === 'Default'" {
-                button
-                    .btn
-                    .btn-success
-                    { "Finish" };
-                button
-                    .btn
-                    .btn-primary
-                    "x-on:click"="state = 'Editing'"
-                    { "Edit" };
-                button .btn { "Delete" }
-            }
-            td x-show="state === 'Editing'" {
-                input
-                    .input
-                    .input-bordered
-                    type="text"
-                    x-model="data_temp.title";
-            }
-            td .flex .gap-2 x-show="state === 'Editing'" {
-                button
-                    .btn
-                    .btn-primary
-                    "x-on:click"="
-                        state = 'Default';
-                        data = {...data_temp};
-                    "
-                    { "Save" };
-                button
-                    .btn
-                    "x-on:click"="
-                        state = 'Default';
-                        data_temp = {...data};
-                    "
-                    { "Cancel" };
-            }
-        }
-    }
 }
 
 pub async fn home(State(state_arc): State<Arc<Mutex<AppState>>>) -> Result<Markup> {
@@ -154,11 +102,7 @@ pub async fn home(State(state_arc): State<Arc<Mutex<AppState>>>) -> Result<Marku
                         }
                         tbody {
                             @for todo in todos {
-                                @if todo.completed {
-                                    (todo_row(TodoState::Done, &todo))
-                                } @else {
-                                    (todo_row(TodoState::Default, &todo))
-                                }
+                                (todo_row(&todo))
                             }
                         }
                     }
@@ -181,16 +125,94 @@ pub async fn page_toggle_todo(
     let markup = if let Ok(mut state) = state_arc.lock() {
         toggle_todo(&mut state.conn, &todo_id)?;
         let todo = read_todo(&mut state.conn, &todo_id)?;
-        todo_row(
-            {
-                if todo.completed {
-                    TodoState::Done
-                } else {
-                    TodoState::Default
+        todo_row(&todo)
+    } else {
+        html! {
+            "Unable to get global state"
+        }
+    };
+
+    Ok(markup)
+}
+
+pub async fn page_edit_todo(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Path(todo_id): Path<String>,
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
+        let todo = read_todo(&mut state.conn, &todo_id)?;
+        html! {
+            tr {
+                td {
+                    input
+                        .input
+                        .input-bordered
+                        type="text"
+                        name="title"
+                        value=(todo.title.clone())
+                    ;
                 }
-            },
-            &todo,
-        )
+                td .flex .gap-2 {
+                    button
+                        .btn
+                        .btn-primary
+                        hx-post=(format!("/save/{}", todo.id.as_str()))
+                        hx-include="input[name='title']"
+                        hx-target="closest tr"
+                        hx-swap="outerHTML"
+                        { "Save" }
+                    ;
+                    button
+                        .btn
+                        hx-target="closest tr"
+                        hx-post=(format!("/default/{}", todo.id.as_str()))
+                        hx-swap="outerHTML"
+                        { "Reset" }
+                    ;
+                }
+            }
+        }
+    } else {
+        html! {
+            "Unable to get global state"
+        }
+    };
+
+    Ok(markup)
+}
+
+pub async fn page_default_todo(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Path(todo_id): Path<String>,
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
+        let todo = read_todo(&mut state.conn, &todo_id)?;
+        todo_row(&todo)
+    } else {
+        html! {
+            "Unable to get global state"
+        }
+    };
+
+    Ok(markup)
+}
+
+
+#[derive(Debug, Deserialize)]
+pub struct TodoForm {
+    pub title: String,
+}
+
+pub async fn page_save_todo(
+    State(state_arc): State<Arc<Mutex<AppState>>>,
+    Path(todo_id): Path<String>,
+    Form(todo_form): Form<TodoForm>,
+) -> Result<Markup> {
+    let markup = if let Ok(mut state) = state_arc.lock() {
+        let mut todo = read_todo(&mut state.conn, &todo_id)?;
+        todo.title = todo_form.title.clone();
+        update_todo(&mut state.conn, &todo)?;
+        todo_row(&todo)
     } else {
         html! {
             "Unable to get global state"

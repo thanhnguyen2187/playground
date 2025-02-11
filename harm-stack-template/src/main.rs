@@ -5,7 +5,7 @@ mod templates;
 
 use crate::db::MIGRATIONS;
 use crate::err::{Error, Result};
-use crate::templates::{home, page_toggle_todo, page_unimplemented};
+use crate::templates::{home, page_default_todo, page_edit_todo, page_save_todo, page_toggle_todo, page_unimplemented};
 use axum::{routing::get, Router};
 use diesel::SqliteConnection;
 use diesel_migrations::MigrationHarness;
@@ -33,6 +33,9 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/", get(home))
         .route("/toggle/{todo_id}", post(page_toggle_todo))
+        .route("/default/{todo_id}", post(page_default_todo))
+        .route("/edit/{todo_id}", post(page_edit_todo))
+        .route("/save/{todo_id}", post(page_save_todo))
         .with_state(Arc::new(Mutex::new(AppState { conn })))
         .route_service("/styles.css", ServeFile::new("./static/styles.css"))
         .layer(LiveReloadLayer::new());
