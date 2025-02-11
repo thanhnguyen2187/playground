@@ -5,14 +5,17 @@ mod templates;
 
 use crate::db::MIGRATIONS;
 use crate::err::{Error, Result};
-use crate::templates::{home, page_create_todo, page_default_todo, page_delete_todo, page_edit_todo, page_save_todo, page_toggle_todo, page_unimplemented};
+use crate::templates::{
+    page_create_todo, page_default_todo, page_delete_todo, page_edit_todo, page_home,
+    page_save_todo, page_toggle_todo, page_unimplemented,
+};
+use axum::routing::{delete, post};
 use axum::{routing::get, Router};
 use diesel::SqliteConnection;
 use diesel_migrations::MigrationHarness;
 use dotenvy::dotenv;
 use snafu::ResultExt;
 use std::sync::{Arc, Mutex};
-use axum::routing::{delete, post};
 use tower_http::services::ServeFile;
 use tower_livereload::LiveReloadLayer;
 
@@ -32,7 +35,7 @@ async fn main() -> Result<()> {
         .map_err(|_| Error::DatabaseMigration {})?;
     let app = Router::new()
         .route("/unimplemented", get(page_unimplemented))
-        .route("/", get(home))
+        .route("/", get(page_home))
         .route("/toggle/{todo_id}", post(page_toggle_todo))
         .route("/default/{todo_id}", post(page_default_todo))
         .route("/edit/{todo_id}", post(page_edit_todo))

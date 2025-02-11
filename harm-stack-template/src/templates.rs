@@ -1,14 +1,14 @@
 use crate::db::{create_todo, delete_todo, read_todo, read_todos, toggle_todo, update_todo, Todo};
-use uuid::Uuid;
 use crate::err::Result;
 use crate::AppState;
 use axum::extract::{Path, State};
+use axum::Form;
+use log::warn;
 use maud::{html, Markup, DOCTYPE};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::sync::{Arc, Mutex};
-use axum::Form;
-use log::warn;
+use uuid::Uuid;
 
 pub fn header(page_title: &str) -> Markup {
     html! {
@@ -93,7 +93,7 @@ pub struct TodoWithTemp {
     pub data_temp: Todo,
 }
 
-pub async fn home(State(state_arc): State<Arc<Mutex<AppState>>>) -> Result<Markup> {
+pub async fn page_home(State(state_arc): State<Arc<Mutex<AppState>>>) -> Result<Markup> {
     let markup = if let Ok(mut state) = state_arc.lock() {
         let todos = read_todos(&mut state.conn)
             .with_whatever_context(|err| format!("Failed to read todos: {}", err))?;
@@ -217,7 +217,6 @@ pub async fn page_default_todo(
     Ok(markup)
 }
 
-
 #[derive(Debug, Deserialize)]
 pub struct TodoForm {
     pub title: String,
@@ -242,9 +241,7 @@ pub async fn page_save_todo(
     Ok(markup)
 }
 
-pub async fn page_create_todo(
-    State(state_arc): State<Arc<Mutex<AppState>>>,
-) -> Result<Markup> {
+pub async fn page_create_todo(State(state_arc): State<Arc<Mutex<AppState>>>) -> Result<Markup> {
     let markup = if let Ok(mut state) = state_arc.lock() {
         let id = Uuid::new_v4().to_string();
         let todo_new = Todo {
@@ -254,8 +251,7 @@ pub async fn page_create_todo(
         };
         create_todo(&mut state.conn, &todo_new)?;
         todo_row(&todo_new)
-    }
-    else {
+    } else {
         html! {
             "Unable to get global state"
         }
