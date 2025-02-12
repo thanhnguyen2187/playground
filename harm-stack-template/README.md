@@ -64,3 +64,16 @@ diesel migration generate [name]
 ```shell
 diesel migration run
 ```
+
+### Favicon
+
+- Generate favicons from https://favicon.io/favicon-converter/, then place them
+  in `static` folder.
+
+## Project Structure
+
+- `src/`: contains the source code of the project
+- `static/`: contains static files which are served from the root path (for
+  example, `static/styles.css` will be accessed at
+  `http://localhost:3000/styles.css`)
+- `migrations/`: contains the database migrations to be used with Diesel
