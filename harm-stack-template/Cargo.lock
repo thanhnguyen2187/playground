@@ -312,6 +312,8 @@ dependencies = [
  "dotenvy",
  "log",
  "maud",
+ "serde",
+ "serde_json",
  "snafu",
  "tokio",
  "tower",
