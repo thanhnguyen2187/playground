@@ -277,6 +277,45 @@ pub async fn page_delete_todo(
     Ok(())
 }
 
+pub async fn page_login() -> Markup {
+    html! {
+        (header("Login"))
+        body {
+            div .container .mx-auto .p-4 {
+                h1 .text-3xl .font-bold .mb-2 { "Login" }
+                form {
+                    div .flex .flex-col .w-80 {
+                        label .label { "Username" }
+                        input
+                            .input
+                            .input-bordered
+                            type="text"
+                            name="username"
+                            placeholder="Username"
+                        ;
+                        label .label { "Password" }
+                        input
+                            .input
+                            .input-bordered
+                            type="password"
+                            name="password"
+                            placeholder="Password"
+                        ;
+                        div .mt-4 .flex .flex-row-reverse {
+                            button
+                                .btn
+                                .btn-primary
+                                type="submit"
+                                { "Login" }
+                            ;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub async fn page_unimplemented() -> Markup {
     html! {
         (header("Unimplemented!!1"))

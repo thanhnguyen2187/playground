@@ -6,7 +6,7 @@ mod templates;
 use crate::db::MIGRATIONS;
 use crate::err::{Error, Result};
 use crate::templates::{
-    page_create_todo, page_default_todo, page_delete_todo, page_edit_todo, page_home,
+    page_create_todo, page_default_todo, page_delete_todo, page_edit_todo, page_home, page_login,
     page_save_todo, page_toggle_todo, page_unimplemented,
 };
 use axum::routing::{delete, post};
@@ -42,6 +42,7 @@ async fn main() -> Result<()> {
         .route("/save/{todo_id}", post(page_save_todo))
         .route("/create", post(page_create_todo))
         .route("/delete/{todo_id}", delete(page_delete_todo))
+        .route("/login", get(page_login))
         .with_state(Arc::new(Mutex::new(AppState { conn })))
         .route_service("/{*wildcard}", ServeDir::new("./static"))
         .layer(LiveReloadLayer::new());
