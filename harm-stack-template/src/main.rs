@@ -16,7 +16,7 @@ use diesel_migrations::MigrationHarness;
 use dotenvy::dotenv;
 use snafu::ResultExt;
 use std::sync::{Arc, Mutex};
-use tower_http::services::ServeFile;
+use tower_http::services::ServeDir;
 use tower_livereload::LiveReloadLayer;
 
 pub struct AppState {
@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
         .route("/create", post(page_create_todo))
         .route("/delete/{todo_id}", delete(page_delete_todo))
         .with_state(Arc::new(Mutex::new(AppState { conn })))
-        .route_service("/styles.css", ServeFile::new("./static/styles.css"))
+        .route_service("/{*wildcard}", ServeDir::new("./static"))
         .layer(LiveReloadLayer::new());
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
