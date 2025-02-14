@@ -11,18 +11,21 @@ use crate::templates::{
     page_create_todo, page_default_todo, page_delete_todo, page_edit_todo, page_home, page_login,
     page_login_success, page_save_todo, page_toggle_todo, page_unimplemented,
 };
+use auth::page_login_check;
 use axum::routing::{delete, post};
 use axum::{routing::get, Router};
-use axum_login::tower_sessions::{MemoryStore, SessionManagerLayer};
+use axum_login::tower_sessions::cookie::time::Duration;
+use axum_login::tower_sessions::{Expiry, MemoryStore, SessionManagerLayer};
 use axum_login::{login_required, AuthManagerLayerBuilder};
 use diesel::SqliteConnection;
 use diesel_migrations::MigrationHarness;
 use dotenvy::dotenv;
 use snafu::ResultExt;
+use std::ops::Mul;
 use std::sync::{Arc, Mutex};
+use std::time;
 use tower_http::services::ServeDir;
 use tower_livereload::LiveReloadLayer;
-use auth::page_login_check;
 
 pub struct AppState {
     conn: SqliteConnection,
@@ -40,7 +43,8 @@ async fn main() -> Result<()> {
         .map_err(|_| Error::DatabaseMigration {})?;
 
     let session_store = MemoryStore::default();
-    let session_layer = SessionManagerLayer::new(session_store);
+    let session_layer = SessionManagerLayer::new(session_store)
+        .with_expiry(Expiry::OnInactivity(Duration::days(30)));
 
     let backend = BackendRudimentary {};
     let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer).build();
