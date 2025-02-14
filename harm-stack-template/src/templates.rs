@@ -3,10 +3,11 @@ use crate::err::Result;
 use crate::AppState;
 use axum::extract::{Path, State};
 use axum::Form;
+use axum_login::{AuthSession, AuthUser, AuthnBackend};
 use log::warn;
 use maud::{html, Markup, DOCTYPE};
 use serde::{Deserialize, Serialize};
-use snafu::ResultExt;
+use snafu::{whatever, ResultExt, Snafu};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
@@ -283,7 +284,7 @@ pub async fn page_login() -> Markup {
         body {
             div .container .mx-auto .p-4 {
                 h1 .text-3xl .font-bold .mb-2 { "Login" }
-                form {
+                form method="post" {
                     div .flex .flex-col .w-80 {
                         label .label { "Username" }
                         input
@@ -311,6 +312,18 @@ pub async fn page_login() -> Markup {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+pub async fn page_login_success() -> Markup {
+    html! {
+        (header("Login Success"))
+        body {
+            div .container .mx-auto .p-4 {
+                h1 .text-3xl .font-bold .mb-2 { "Login Success" }
+                p { "You are now logged in" }
             }
         }
     }

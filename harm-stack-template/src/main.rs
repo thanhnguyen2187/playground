@@ -1,16 +1,20 @@
+mod auth;
 mod db;
 mod err;
 mod schema;
 mod templates;
 
+use crate::auth::BackendRudimentary;
 use crate::db::MIGRATIONS;
 use crate::err::{Error, Result};
 use crate::templates::{
     page_create_todo, page_default_todo, page_delete_todo, page_edit_todo, page_home, page_login,
-    page_save_todo, page_toggle_todo, page_unimplemented,
+    page_login_success, page_save_todo, page_toggle_todo, page_unimplemented,
 };
 use axum::routing::{delete, post};
 use axum::{routing::get, Router};
+use axum_login::tower_sessions::{MemoryStore, SessionManagerLayer};
+use axum_login::{login_required, AuthManagerLayerBuilder};
 use diesel::SqliteConnection;
 use diesel_migrations::MigrationHarness;
 use dotenvy::dotenv;
@@ -18,6 +22,7 @@ use snafu::ResultExt;
 use std::sync::{Arc, Mutex};
 use tower_http::services::ServeDir;
 use tower_livereload::LiveReloadLayer;
+use auth::page_login_check;
 
 pub struct AppState {
     conn: SqliteConnection,
@@ -33,7 +38,18 @@ async fn main() -> Result<()> {
     //       descriptive
     conn.run_pending_migrations(MIGRATIONS)
         .map_err(|_| Error::DatabaseMigration {})?;
+
+    let session_store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(session_store);
+
+    let backend = BackendRudimentary {};
+    let auth_layer = AuthManagerLayerBuilder::new(backend, session_layer).build();
+
     let app = Router::new()
+        .route("/login_success", get(page_login_success))
+        .route_layer(login_required!(BackendRudimentary, login_url = "/login"))
+        .route("/login", get(page_login))
+        .route("/login", post(page_login_check))
         .route("/unimplemented", get(page_unimplemented))
         .route("/", get(page_home))
         .route("/toggle/{todo_id}", post(page_toggle_todo))
@@ -42,9 +58,9 @@ async fn main() -> Result<()> {
         .route("/save/{todo_id}", post(page_save_todo))
         .route("/create", post(page_create_todo))
         .route("/delete/{todo_id}", delete(page_delete_todo))
-        .route("/login", get(page_login))
         .with_state(Arc::new(Mutex::new(AppState { conn })))
         .route_service("/{*wildcard}", ServeDir::new("./static"))
+        .layer(auth_layer)
         .layer(LiveReloadLayer::new());
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
