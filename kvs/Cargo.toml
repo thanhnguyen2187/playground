@@ -7,7 +7,7 @@ edition = "2021"
 
 [[bin]]
 name = "kvs-server"
-path = "src/bin/server.rs"
+path = "src/bin/server_tcp.rs"
 
 [[bin]]
 name = "kvs-server-tcp"
@@ -15,7 +15,7 @@ path = "src/bin/server_tcp.rs"
 
 [[bin]]
 name = "kvs-client"
-path = "src/bin/client.rs"
+path = "src/bin/client_tcp.rs"
 
 [[bin]]
 name = "kvs-client-tcp"

@@ -65,30 +65,29 @@ fn respond<T: Write>(stream: &mut T, command_response: CommandResponse) -> Resul
     match command_response {
         CommandResponse::Get { value } => {
             let mut buf_writer = BufWriter::new(stream);
-            let output = value.unwrap_or("Key not found".to_string());
-            buf_writer
-                .write(output.as_bytes())
-                .with_whatever_context(|e| format!("Error happened writing to stream {}", e))?;
+            if let Some(value) = value {
+                buf_writer
+                    .write(format!("OK {}", value).as_bytes())
+                    .with_whatever_context(|e| format!("Error happened writing to stream {}", e))?;
+            } else {
+                buf_writer
+                    .write("ERR Key not found".as_bytes())
+                    .with_whatever_context(|e| format!("Error happened writing to stream {}", e))?;
+            }
             buf_writer
                 .flush()
                 .with_whatever_context(|e| format!("Error happened flushing {}", e))?;
-            // stream.shutdown(Shutdown::Both).with_whatever_context(
-            //     |err| "Unable to shut down stream",
-            // )?;
         }
         CommandResponse::Set {} => {}
         CommandResponse::Rm { value } => {
             if value.is_none() {
                 let mut buf_writer = BufWriter::new(stream);
                 buf_writer
-                    .write("Key not found".as_bytes())
+                    .write("ERR Key not found".as_bytes())
                     .with_whatever_context(|e| format!("Error happened writing to stream {}", e))?;
                 buf_writer
                     .flush()
                     .with_whatever_context(|e| format!("Error happened flushing {}", e))?;
-                // stream.shutdown(Shutdown::Both).with_whatever_context(
-                //     |err| "Unable to shut down stream",
-                // )?;
             }
         }
     }
@@ -211,6 +210,8 @@ fn main() -> Result<()> {
             Engine::Mem => "in-memory",
         }
     });
+    let current_dir = env::current_dir().unwrap();
+    info!("Current directory: {:?}", &current_dir);
 
     if let Err(err) = check_engine_db_file(&cli.engine) {
         error!(
@@ -220,7 +221,6 @@ fn main() -> Result<()> {
         return Err(err);
     }
 
-    let current_dir = env::current_dir().unwrap();
     let mut store: Box<dyn KvsEngine> = match cli.engine {
         Engine::Kvs => Box::new(KvStoreV2::open(current_dir.as_path())?),
         Engine::Sled => Box::new(SledStore::open(current_dir.as_path())?),

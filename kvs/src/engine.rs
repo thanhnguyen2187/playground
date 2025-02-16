@@ -19,11 +19,8 @@ pub fn evaluate_command(command: &Command, store: &mut dyn KvsEngine) -> Result<
             store.set(key.clone(), value.clone())?;
             Ok(CommandResponse::Set {})
         }
-        Command::Rm { key } => {
-            store.remove(key.clone())?;
-            Ok(CommandResponse::Rm {
-                value: Some(key.clone()),
-            })
-        }
+        Command::Rm { key } => Ok(CommandResponse::Rm {
+            value: store.remove(key.clone())?,
+        }),
     }
 }
