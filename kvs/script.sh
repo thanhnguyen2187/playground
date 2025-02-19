@@ -16,3 +16,7 @@ curl 127.0.0.1:4004/v1/get/3 &;
 curl 127.0.0.1:4004/v2
 
 curl -i 127.0.0.1:4004/v1/get/5;
+
+echo 'GET key1' | nc localhost 4004 -N &;
+echo 'GET key2' | nc localhost 4004 -N &;
+echo 'GET key3' | nc localhost 4004 -N &;
