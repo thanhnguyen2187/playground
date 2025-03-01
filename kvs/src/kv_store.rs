@@ -161,6 +161,10 @@ impl KvStoreV2 {
         self.log_count = map.len();
         Ok(())
     }
+
+    pub fn clone(&self) -> Self {
+        todo!()
+    }
 }
 
 impl KvsEngine for KvStoreV2 {

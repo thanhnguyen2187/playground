@@ -3,6 +3,7 @@ pub mod err;
 mod kv_store;
 mod sled_store;
 mod mem_store;
+pub mod thread_pool;
 
 pub use engine::{KvsEngine, evaluate_command};
 pub use err::{Error, Result};
