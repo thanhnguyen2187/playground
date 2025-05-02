@@ -1,4 +1,4 @@
-from sympy import pprint, symbols, init_printing, solveset, Eq
+from sympy import pprint, symbols, solveset, Eq
 
 
 def main():
