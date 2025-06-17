@@ -88,13 +88,16 @@ export default function Component() {
     return validateDate(formStore.toDate);
   });
   const fromToDateValidation = createMemo(() => {
+    return validateFromToDate(formStore.fromDate, formStore.toDate);
+  });
+  const finalValidation = createMemo(() => {
     return (
       (formStore.flightType === "one-way-flight" &&
         fromDateValidation().isValid) ||
       (formStore.flightType === "return-flight" &&
         fromDateValidation().isValid &&
         toDateValidation().isValid &&
-        validateFromToDate(formStore.fromDate, formStore.toDate).isValid)
+        fromToDateValidation().isValid)
     );
   });
 
@@ -170,7 +173,7 @@ export default function Component() {
           class="btn"
           type="button"
           on:click={handleSubmit}
-          disabled={!fromToDateValidation()}
+          disabled={!finalValidation()}
         >
           Submit
         </button>
