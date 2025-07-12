@@ -2,6 +2,8 @@
 import { parseAsString, useQueryState } from "nuqs-svelte";
 import AppSidebar from "$lib/components/app-sidebar.svelte";
 import * as Breadcrumb from "$lib/components/ui/breadcrumb";
+import { Button } from "$lib/components/ui/button/index";
+import { Input } from "$lib/components/ui/input/index";
 import { Separator } from "$lib/components/ui/separator";
 import * as Sidebar from "$lib/components/ui/sidebar";
 
@@ -21,10 +23,12 @@ function mapComponentId(value: string) {
     case "flight-booker":
       return "03. Flight Booker";
   }
-  return "00. Unknown";
+  return "00. TODO";
 }
 
 let pageTitle = $derived(mapComponentId(componentId.current));
+
+let count = $state(0);
 </script>
 
 <Sidebar.Provider>
@@ -46,12 +50,15 @@ let pageTitle = $derived(mapComponentId(componentId.current));
 			</Breadcrumb.Root>
 		</header>
 		<div class="flex flex-1 flex-col gap-4 p-4">
-			<div class="grid auto-rows-min gap-4 md:grid-cols-3">
-				<div class="bg-muted/50 aspect-video rounded-xl"></div>
-				<div class="bg-muted/50 aspect-video rounded-xl"></div>
-				<div class="bg-muted/50 aspect-video rounded-xl"></div>
+			<div class="flex gap-4 w-40">
+				<Button
+					variant="secondary"
+					onclick={() => count = Number(count) + 1}
+				>
+					Increase
+				</Button>
+				<Input bind:value={count} />
 			</div>
-			<div class="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min"></div>
 		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>

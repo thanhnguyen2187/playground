@@ -16,7 +16,6 @@ const componentId = useQueryState(
 );
 
 const data = {
-  versions: ["1.0.1", "1.1.0-alpha", "2.0.0-beta1"],
   navMain: [
     {
       title: "7GUIs Shadcn Svelte",
@@ -39,7 +38,7 @@ const data = {
         },
         {
           id: "todo",
-          title: "04. TODO",
+          title: "00. TODO",
           url: "#",
         },
       ],
