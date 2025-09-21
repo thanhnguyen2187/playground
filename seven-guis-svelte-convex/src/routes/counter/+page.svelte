@@ -10,16 +10,12 @@ function increase() {
 }
 </script>
 
-<span>
 {#if query.isLoading}
-  Loading...
+  <span>Loading...</span>
 {:else if query.error}
-  failed to load: {query.error.toString()}
+  <span>Failed to load: {query.error.toString()}</span>
 {:else}
-  {query.data}
+  <input class="input w-20" type="number" value={query.data} />
 {/if}
-</span>
 
-<br/>
-
-<button onclick={increase}>Increase</button>
+<button class="btn" onclick={increase}>Increase</button>
