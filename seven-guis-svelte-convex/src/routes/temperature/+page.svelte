@@ -3,11 +3,11 @@ let celsius = $state(0);
 let fahrenheit = $state(32);
 
 function updateFahrenheit() {
-	fahrenheit = Math.round((celsius * 9/5 + 32) * 100) / 100;
+  fahrenheit = Math.round(((celsius * 9) / 5 + 32) * 100) / 100;
 }
 
 function updateCelsius() {
-	celsius = Math.round(((fahrenheit - 32) * 5/9) * 100) / 100;
+  celsius = Math.round((((fahrenheit - 32) * 5) / 9) * 100) / 100;
 }
 </script>
 
@@ -27,10 +27,12 @@ function updateCelsius() {
 						step="0.01"
 						bind:value={celsius}
 						oninput={updateFahrenheit}
-						class="input input-bordered join-item flex-1"
+						class="input join-item flex-1"
 						placeholder="0"
 					/>
-					<span class="btn btn-outline join-item">°C</span>
+					<div>
+						<span class="btn join-item">°C</span>
+					</div>
 				</div>
 			</div>
 
@@ -50,7 +52,9 @@ function updateCelsius() {
 						class="input input-bordered join-item flex-1"
 						placeholder="32"
 					/>
-					<span class="btn btn-outline join-item">°F</span>
+					<div>
+						<span class="btn join-item">°F</span>
+					</div>
 				</div>
 			</div>
 		</div>
