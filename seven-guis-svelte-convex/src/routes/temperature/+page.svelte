@@ -1,13 +1,26 @@
 <script lang="ts">
-let celsius = $state(0);
-let fahrenheit = $state(32);
+import { useConvexClient, useQuery } from "convex-svelte";
+import { api } from "../../convex/_generated/api";
 
-function updateFahrenheit() {
-  fahrenheit = Math.round(((celsius * 9) / 5 + 32) * 100) / 100;
+const query = useQuery(api.temperature_converter.get, {});
+const client = useConvexClient();
+let celsius = $derived(query.data ? query.data[0] : 0);
+let fahrenheit = $derived(query.data ? query.data[1] : 32);
+
+function updateFahrenheit(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const value = Math.round(parseFloat(input.value) * 100) / 100;
+  client.mutation(api.temperature_converter.setValueFahrenheit, {
+    value: value,
+  });
 }
 
-function updateCelsius() {
-  celsius = Math.round((((fahrenheit - 32) * 5) / 9) * 100) / 100;
+function updateCelsius(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const value = Math.round(parseFloat(input.value) * 100) / 100;
+  client.mutation(api.temperature_converter.setValueCelsius, {
+    value: value,
+  });
 }
 </script>
 
@@ -25,8 +38,8 @@ function updateCelsius() {
 						id="celsius"
 						type="number"
 						step="0.01"
-						bind:value={celsius}
-						oninput={updateFahrenheit}
+						value={celsius}
+						oninput={updateCelsius}
 						class="input join-item flex-1"
 						placeholder="0"
 					/>
@@ -47,8 +60,8 @@ function updateCelsius() {
 						id="fahrenheit"
 						type="number"
 						step="0.01"
-						bind:value={fahrenheit}
-						oninput={updateCelsius}
+						value={fahrenheit}
+						oninput={updateFahrenheit}
 						class="input input-bordered join-item flex-1"
 						placeholder="32"
 					/>

@@ -16,6 +16,5 @@ function increase() {
   <span>Failed to load: {query.error.toString()}</span>
 {:else}
   <input class="input w-20" type="number" value={query.data} />
+  <button class="btn" onclick={increase}>Increase</button>
 {/if}
-
-<button class="btn" onclick={increase}>Increase</button>

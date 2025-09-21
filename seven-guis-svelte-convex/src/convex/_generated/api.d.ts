@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as counter from "../counter.js";
 import type * as tasks from "../tasks.js";
+import type * as temperature_converter from "../temperature_converter.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -27,6 +28,7 @@ import type * as tasks from "../tasks.js";
 declare const fullApi: ApiFromModules<{
   counter: typeof counter;
   tasks: typeof tasks;
+  temperature_converter: typeof temperature_converter;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
