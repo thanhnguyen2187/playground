@@ -1,47 +1,47 @@
 <script lang="ts">
 const guiTasks = [
-	{
-		name: 'Counter',
-		path: '/counter',
-		description: 'Simple counter with increment functionality',
-		implemented: true
-	},
-	{
-		name: 'Temperature Converter',
-		path: '/temperature',
-		description: 'Convert between Celsius and Fahrenheit',
-		implemented: false
-	},
-	{
-		name: 'Flight Booker',
-		path: '/flight-booker',
-		description: 'Book one-way or return flights',
-		implemented: false
-	},
-	{
-		name: 'Timer',
-		path: '/timer',
-		description: 'Configurable timer with progress visualization',
-		implemented: false
-	},
-	{
-		name: 'CRUD',
-		path: '/crud',
-		description: 'Create, Read, Update, Delete operations',
-		implemented: false
-	},
-	{
-		name: 'Circle Drawer',
-		path: '/circle-drawer',
-		description: 'Draw and resize circles with undo/redo',
-		implemented: false
-	},
-	{
-		name: 'Cells',
-		path: '/cells',
-		description: 'Simple spreadsheet with formulas',
-		implemented: false
-	}
+  {
+    name: "Counter",
+    path: "/counter",
+    description: "Simple counter with increment functionality",
+    implemented: true,
+  },
+  {
+    name: "Temperature Converter",
+    path: "/temperature",
+    description: "Convert between Celsius and Fahrenheit",
+    implemented: true,
+  },
+  {
+    name: "Flight Booker",
+    path: "/flight-booker",
+    description: "Book one-way or return flights",
+    implemented: false,
+  },
+  {
+    name: "Timer",
+    path: "/timer",
+    description: "Configurable timer with progress visualization",
+    implemented: false,
+  },
+  {
+    name: "CRUD",
+    path: "/crud",
+    description: "Create, Read, Update, Delete operations",
+    implemented: false,
+  },
+  {
+    name: "Circle Drawer",
+    path: "/circle-drawer",
+    description: "Draw and resize circles with undo/redo",
+    implemented: false,
+  },
+  {
+    name: "Cells",
+    path: "/cells",
+    description: "Simple spreadsheet with formulas",
+    implemented: false,
+  },
 ];
 </script>
 
