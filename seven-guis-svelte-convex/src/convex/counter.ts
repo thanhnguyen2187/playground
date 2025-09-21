@@ -7,6 +7,7 @@ export const get = query({
     return record?.value ?? 0;
   },
 });
+
 export const increase = mutation({
   args: {},
   handler: async (ctx) => {
